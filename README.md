@@ -19,13 +19,14 @@ How does it work
 *envconfig* takes the hierarchy of your configuration struct and the names of the fields to create a environment variable key.
 
 For example:
-        var conf struct {
-            Name string
-            Shard struct [
-                Host string
-                Port int
-            }
+
+    var conf struct {
+        Name string
+        Shard struct [
+            Host string
+            Port int
         }
+    }
 
 This will check for those 3 keys:
 
@@ -37,9 +38,10 @@ With slices or arrays, the same naming is applied for the slice. To put multiple
 them with a *,* (will probably be configurable in the future, or at least have a way to escape)
 
 For example:
-        var conf struct {
-            Ports []int
-        }
+
+    var conf struct {
+        Ports []int
+    }
 
 This will check for the key __PORTS__:
 
@@ -50,12 +52,13 @@ For slices of structs, it's a little more complicated. The same splitting of sli
 a specific format like this: *{<first field>,<second field>,...}*
 
 For example:
-        var conf struct {
-            Shards []struct {
-                Name string
-                Port int
-            }
+
+    var conf struct {
+        Shards []struct {
+            Name string
+            Port int
         }
+    }
 
 This will check for the key __SHARDS__. Example variable content: `{foobar,9000},{barbaz,20000}`
 
