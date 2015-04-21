@@ -3,7 +3,7 @@ envconfig
 
 envconfig is a library which allows you to parse your configuration from environment variables and fill an arbitrary struct.
 
-See [the example](https://godoc.org/github.com/vrischmann/envconfig#example_init) to understand how to use it, it's pretty simple.
+See [the example](https://godoc.org/github.com/vrischmann/envconfig#example-Init) to understand how to use it, it's pretty simple.
 
 Supported types
 ---------------
