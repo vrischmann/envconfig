@@ -212,6 +212,28 @@ func TestEnvUnmarshaler(t *testing.T) {
 	equals(t, logFile, conf.LogMode)
 }
 
+func TestParseOptionalConfig(t *testing.T) {
+	var conf struct {
+		Name string `envconfig:"optional"`
+	}
+
+	err := envconfig.Init(&conf)
+	ok(t, err)
+	equals(t, "", conf.Name)
+}
+
+func TestParseCustomNameConfig(t *testing.T) {
+	var conf struct {
+		Name string `envconfig:"customName"`
+	}
+
+	os.Setenv("customName", "foobar")
+
+	err := envconfig.Init(&conf)
+	ok(t, err)
+	equals(t, "foobar", conf.Name)
+}
+
 // assert fails the test if the condition is false.
 func assert(tb testing.TB, condition bool, msg string, v ...interface{}) {
 	if !condition {

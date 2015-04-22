@@ -37,11 +37,43 @@ func Init(conf interface{}) error {
 	}
 }
 
+type tag struct {
+	customName string
+	optional   bool
+}
+
+func parseTag(s string) *tag {
+	tag := &tag{}
+
+	tokens := strings.Split(s, ",")
+	if len(tokens) == 0 {
+		return tag
+	}
+
+	for _, v := range tokens {
+		if v == "optional" {
+			tag.optional = true
+		} else {
+			tag.customName = v
+		}
+	}
+
+	return tag
+}
+
 func readStruct(value reflect.Value, parentName string) (err error) {
 	for i := 0; i < value.NumField(); i++ {
 		field := value.Field(i)
 		name := value.Type().Field(i).Name
-		combinedName := combineName(parentName, name)
+
+		tag := parseTag(value.Type().Field(i).Tag.Get("envconfig"))
+
+		var combinedName string
+		if tag.customName != "" {
+			combinedName = tag.customName
+		} else {
+			combinedName = combineName(parentName, name)
+		}
 
 	doRead:
 		switch field.Kind() {
@@ -53,7 +85,7 @@ func readStruct(value reflect.Value, parentName string) (err error) {
 		case reflect.Struct:
 			err = readStruct(field, combinedName)
 		default:
-			err = setField(field, combinedName)
+			err = setField(field, combinedName, tag.customName != "", tag.optional)
 		}
 
 		if err != nil {
@@ -64,10 +96,9 @@ func readStruct(value reflect.Value, parentName string) (err error) {
 	return
 }
 
-func setField(value reflect.Value, name string) (err error) {
+func setField(value reflect.Value, name string, customName, optional bool) (err error) {
 	r := reader{}
-	// TODO(vincent): optional field
-	r.readValue(name, false)
+	r.readValue(name, customName, optional)
 	if r.err != nil {
 		return r.err
 	}
@@ -268,12 +299,16 @@ type reader struct {
 	str string
 }
 
-func (r *reader) readValue(name string, optional bool) {
+func (r *reader) readValue(name string, customName, optional bool) {
 	if r.err != nil {
 		return
 	}
 
-	key := nameToKey(name)
+	key := name
+	if !customName {
+		key = nameToKey(name)
+	}
+
 	r.str = os.Getenv(key)
 	if r.str != "" {
 		return
