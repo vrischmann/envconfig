@@ -70,5 +70,4 @@ This will result in two struct defined in the *Shards* slice.
 Future work
 -----------
 
-  * support for optional values
   * support for defaut values ? don't know how to yet
