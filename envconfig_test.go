@@ -21,6 +21,10 @@ func TestParseSimpleConfig(t *testing.T) {
 		}
 	}
 
+	// Go 1.2 and 1.3 don't have os.Unsetenv
+	os.Setenv("NAME", "")
+	os.Setenv("LOG_PATH", "")
+
 	err := envconfig.Init(&conf)
 	equals(t, "envconfig: key NAME not found", err.Error())
 
