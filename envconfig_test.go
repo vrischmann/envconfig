@@ -217,6 +217,8 @@ func TestParseOptionalConfig(t *testing.T) {
 		Name string `envconfig:"optional"`
 	}
 
+	os.Setenv("NAME", "")
+
 	err := envconfig.Init(&conf)
 	ok(t, err)
 	equals(t, "", conf.Name)
