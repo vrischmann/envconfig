@@ -16,7 +16,7 @@ type EnvUnmarshaler interface {
 	Unmarshal(s string) error
 }
 
-// Init reads the configuration from environment variables and populates the conf object
+// Init reads the configuration from environment variables and populates the conf object. conf must be a pointer
 func Init(conf interface{}) error {
 	value := reflect.ValueOf(conf)
 	if value.Kind() != reflect.Ptr {
