@@ -3,7 +3,6 @@ package envconfig
 import (
 	"errors"
 	"fmt"
-	"math"
 	"os"
 	"reflect"
 	"strconv"
@@ -97,17 +96,16 @@ func readStruct(value reflect.Value, parentName string) (err error) {
 }
 
 func setField(value reflect.Value, name string, customName, optional bool) (err error) {
-	r := reader{}
-	r.readValue(name, customName, optional)
-	if r.err != nil {
-		return r.err
+	str, err := readValue(name, customName, optional)
+	if err != nil {
+		return err
 	}
 
 	switch value.Kind() {
 	case reflect.Slice:
-		return setSliceField(value, r.str)
+		return setSliceField(value, str)
 	default:
-		return parseValue(value, r.str)
+		return parseValue(value, str)
 	}
 
 	return
@@ -294,61 +292,20 @@ func combineName(parentName, name string) string {
 	return parentName + "." + name
 }
 
-type reader struct {
-	err error
-	str string
-}
-
-func (r *reader) readValue(name string, customName, optional bool) {
-	if r.err != nil {
-		return
-	}
-
+func readValue(name string, customName, optional bool) (string, error) {
 	key := name
 	if !customName {
 		key = nameToKey(name)
 	}
 
-	r.str = os.Getenv(key)
-	if r.str != "" {
-		return
+	str := os.Getenv(key)
+	if str != "" {
+		return str, nil
 	}
 
 	if optional {
-		return
+		return str, nil
 	}
 
-	r.err = fmt.Errorf("envconfig: key %v not found", key)
-}
-
-func (r *reader) toInt64() (int64, error) {
-	if r.err != nil {
-		return -1, r.err
-	}
-
-	return strconv.ParseInt(r.str, 10, 64)
-}
-
-func (r *reader) toUint64() (uint64, error) {
-	if r.err != nil {
-		return 0, r.err
-	}
-
-	return strconv.ParseUint(r.str, 10, 64)
-}
-
-func (r *reader) toBool() (bool, error) {
-	if r.err != nil {
-		return false, r.err
-	}
-
-	return strconv.ParseBool(r.str)
-}
-
-func (r *reader) toFloat64() (float64, error) {
-	if r.err != nil {
-		return math.NaN(), r.err
-	}
-
-	return strconv.ParseFloat(r.str, 64)
+	return "", fmt.Errorf("envconfig: key %v not found", key)
 }
