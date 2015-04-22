@@ -11,7 +11,7 @@ See [the example](https://godoc.org/github.com/vrischmann/envconfig#example-Init
 Supported types
 ---------------
 
-  * All standard types plus `time.Duration` are supported by default.
+  * Almost all standard types plus `time.Duration` are supported by default.
   * Slices and arrays
   * Arbitrary structs
   * Custom types via the [EnvUnmarshaler](https://godoc.org/github.com/vrischmann/envconfig/#EnvUnmarshaler) interface.
@@ -71,3 +71,5 @@ Future work
 -----------
 
   * support for defaut values ? don't know how to yet
+  * support for time.Time values with a layout defined via a field tag
+  * support for complex types
