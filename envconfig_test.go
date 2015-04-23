@@ -199,7 +199,7 @@ func (m *logMode) Unmarshal(s string) error {
 	return nil
 }
 
-func TestEnvUnmarshaler(t *testing.T) {
+func TestUnmarshaler(t *testing.T) {
 	var conf struct {
 		LogMode logMode
 	}

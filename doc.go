@@ -94,7 +94,7 @@ Custom unmarshaler
 
 When the standard types are not enough, you will want to use a custom unmarshaler for your types.
 
-You do this by implementing EnvUnmarshaler on your type. Here's an example:
+You do this by implementing Unmarshaler on your type. Here's an example:
 
     type connectionType uint
 

@@ -14,7 +14,7 @@ Supported types
   * Almost all standard types plus `time.Duration` are supported by default.
   * Slices and arrays
   * Arbitrary structs
-  * Custom types via the [EnvUnmarshaler](https://godoc.org/github.com/vrischmann/envconfig/#EnvUnmarshaler) interface.
+  * Custom types via the [Unmarshaler](https://godoc.org/github.com/vrischmann/envconfig/#Unmarshaler) interface.
 
 How does it work
 ----------------

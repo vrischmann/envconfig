@@ -10,9 +10,9 @@ import (
 	"time"
 )
 
-// EnvUnmarshaler is the interface implemented by objects that can unmarshal
+// Unmarshaler is the interface implemented by objects that can unmarshal
 // a environment variable string of themselves.
-type EnvUnmarshaler interface {
+type Unmarshaler interface {
 	Unmarshal(s string) error
 }
 
@@ -136,7 +136,7 @@ func setSliceField(value reflect.Value, str string) error {
 
 var (
 	durationType    = reflect.TypeOf(new(time.Duration)).Elem()
-	unmarshalerType = reflect.TypeOf(new(EnvUnmarshaler)).Elem()
+	unmarshalerType = reflect.TypeOf(new(Unmarshaler)).Elem()
 )
 
 func isDurationField(t reflect.Type) bool {
@@ -150,9 +150,9 @@ func isUnmarshaler(t reflect.Type) bool {
 func parseValue(v reflect.Value, str string) (err error) {
 	vtype := v.Type()
 
-	// Special case for EnvUnmarshaler
+	// Special case for Unmarshaler
 	if isUnmarshaler(vtype) {
-		return parseWithEnvUnmarshaler(v, str)
+		return parseWithUnmarshaler(v, str)
 	}
 
 	// Special case for time.Duration
@@ -184,18 +184,18 @@ func parseValue(v reflect.Value, str string) (err error) {
 	return
 }
 
-func parseWithEnvUnmarshaler(v reflect.Value, str string) error {
-	var u EnvUnmarshaler
+func parseWithUnmarshaler(v reflect.Value, str string) error {
+	var u Unmarshaler
 	vtype := v.Type()
 
 	if vtype.Implements(unmarshalerType) {
-		u = v.Interface().(EnvUnmarshaler)
+		u = v.Interface().(Unmarshaler)
 	} else if reflect.PtrTo(vtype).Implements(unmarshalerType) {
 		// We know the interface has a pointer receiver, but our value might not be a pointer, so we get one
 		if v.Kind() != reflect.Ptr {
-			u = v.Addr().Interface().(EnvUnmarshaler)
+			u = v.Addr().Interface().(Unmarshaler)
 		} else {
-			u = v.Interface().(EnvUnmarshaler)
+			u = v.Interface().(Unmarshaler)
 		}
 	}
 
