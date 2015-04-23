@@ -1,5 +1,5 @@
 /*
-Package envconfig implements a configuration reader which reads each values from a environment variable
+Package envconfig implements a configuration reader which reads each value from an environment variable.
 
 The basic idea is that you define a configuration struct, like this:
 
@@ -23,7 +23,9 @@ Once you have that, you need to initialize the configuration:
         log.Fatalln(err)
     }
 
-And then you're done, your conf object is populated. Let's see the details
+Then it's just a matter of setting the environment variables when calling your binary:
+
+    ADDR=localhost PORT=6379 AUTH_KEY=foobar ./mybinary
 
 Naming of the keys
 
@@ -42,7 +44,7 @@ You can override the expected name of the key for a single field using a field t
         Name `envconfig:"customName"`
     }
 
-Now envconfig will read the environment variable named "customName"
+Now envconfig will read the environment variable named "customName".
 
 Content of the variables
 
@@ -74,7 +76,7 @@ Example of a valid slice of struct values:
 
 Optional values
 
-Sometimes you don't absolutely need a value. Here's how we tell envconfig a value is optional
+Sometimes you don't absolutely need a value. Here's how we tell envconfig a value is optional:
 
     var conf struct {
         Name string `envconfig:"optional"`
