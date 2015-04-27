@@ -25,7 +25,7 @@ For example:
 
     var conf struct {
         Name string
-        Shard struct [
+        Shard struct {
             Host string
             Port int
         }
