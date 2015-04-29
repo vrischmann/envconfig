@@ -18,6 +18,10 @@ type Unmarshaler interface {
 
 // Init reads the configuration from environment variables and populates the conf object. conf must be a pointer
 func Init(conf interface{}) error {
+	return InitWithPrefix(conf, "")
+}
+
+func InitWithPrefix(conf interface{}, prefix string) error {
 	value := reflect.ValueOf(conf)
 	if value.Kind() != reflect.Ptr {
 		return errors.New("envconfig: value is not a pointer")
@@ -28,9 +32,9 @@ func Init(conf interface{}) error {
 	switch elem.Kind() {
 	case reflect.Ptr:
 		elem.Set(reflect.New(elem.Type().Elem()))
-		return readStruct(elem.Elem(), "", false)
+		return readStruct(elem.Elem(), prefix, false)
 	case reflect.Struct:
-		return readStruct(elem, "", false)
+		return readStruct(elem, prefix, false)
 	default:
 		return errors.New("envconfig: invalid value kind, only works on structs")
 	}

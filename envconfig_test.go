@@ -250,6 +250,19 @@ func TestParseOptionalStruct(t *testing.T) {
 	equals(t, "", conf.Master.Name)
 }
 
+func TestParsePrefixedStruct(t *testing.T) {
+	var conf struct {
+		Name string
+	}
+
+	os.Setenv("NAME", "bad")
+	os.Setenv("FOO_NAME", "good")
+
+	err := envconfig.InitWithPrefix(&conf, "FOO")
+	ok(t, err)
+	equals(t, "good", conf.Name)
+}
+
 // assert fails the test if the condition is false.
 func assert(tb testing.TB, condition bool, msg string, v ...interface{}) {
 	if !condition {
