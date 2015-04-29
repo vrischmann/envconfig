@@ -21,6 +21,8 @@ func Init(conf interface{}) error {
 	return InitWithPrefix(conf, "")
 }
 
+// InitWithPrefix reads the configuration from environment variables and populates the conf object. conf must be a pointer.
+// Each key read will be prefixed with the prefix string.
 func InitWithPrefix(conf interface{}, prefix string) error {
 	value := reflect.ValueOf(conf)
 	if value.Kind() != reflect.Ptr {
