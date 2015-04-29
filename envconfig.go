@@ -107,8 +107,6 @@ func setField(value reflect.Value, name string, customName, optional bool) (err 
 	default:
 		return parseValue(value, str)
 	}
-
-	return
 }
 
 func setSliceField(value reflect.Value, str string) error {
