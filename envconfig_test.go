@@ -236,6 +236,20 @@ func TestParseCustomNameConfig(t *testing.T) {
 	equals(t, "foobar", conf.Name)
 }
 
+func TestParseOptionalStruct(t *testing.T) {
+	var conf struct {
+		Master struct {
+			Name string
+		} `envconfig:"optional"`
+	}
+
+	os.Setenv("MASTER_NAME", "")
+
+	err := envconfig.Init(&conf)
+	ok(t, err)
+	equals(t, "", conf.Master.Name)
+}
+
 // assert fails the test if the condition is false.
 func assert(tb testing.TB, condition bool, msg string, v ...interface{}) {
 	if !condition {
