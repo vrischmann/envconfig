@@ -28,9 +28,9 @@ func Init(conf interface{}) error {
 	switch elem.Kind() {
 	case reflect.Ptr:
 		elem.Set(reflect.New(elem.Type().Elem()))
-		return readStruct(elem.Elem(), "")
+		return readStruct(elem.Elem(), "", false)
 	case reflect.Struct:
-		return readStruct(elem, "")
+		return readStruct(elem, "", false)
 	default:
 		return errors.New("envconfig: invalid value kind, only works on structs")
 	}
@@ -60,7 +60,7 @@ func parseTag(s string) *tag {
 	return tag
 }
 
-func readStruct(value reflect.Value, parentName string) (err error) {
+func readStruct(value reflect.Value, parentName string, optional bool) (err error) {
 	for i := 0; i < value.NumField(); i++ {
 		field := value.Field(i)
 		name := value.Type().Field(i).Name
@@ -82,9 +82,9 @@ func readStruct(value reflect.Value, parentName string) (err error) {
 			field = field.Elem()
 			goto doRead
 		case reflect.Struct:
-			err = readStruct(field, combinedName)
+			err = readStruct(field, combinedName, optional || tag.optional)
 		default:
-			err = setField(field, combinedName, tag.customName != "", tag.optional)
+			err = setField(field, combinedName, tag.customName != "", optional || tag.optional)
 		}
 
 		if err != nil {
