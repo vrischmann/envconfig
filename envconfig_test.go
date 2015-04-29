@@ -255,10 +255,15 @@ func TestParsePrefixedStruct(t *testing.T) {
 		Name string
 	}
 
-	os.Setenv("NAME", "bad")
-	os.Setenv("FOO_NAME", "good")
+	os.Setenv("NAME", "")
+	os.Setenv("FOO_NAME", "")
 
+	os.Setenv("NAME", "bad")
 	err := envconfig.InitWithPrefix(&conf, "FOO")
+	assert(t, err != nil, "err should not be nil")
+
+	os.Setenv("FOO_NAME", "good")
+	err = envconfig.InitWithPrefix(&conf, "FOO")
 	ok(t, err)
 	equals(t, "good", conf.Name)
 }
