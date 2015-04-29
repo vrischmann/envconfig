@@ -49,3 +49,27 @@ func ExampleInit() {
 	// true
 	// 2m0s
 }
+
+func ExampleInitWithPrefix() {
+	var conf struct {
+		Name string
+	}
+
+	os.Setenv("NAME", "")
+	os.Setenv("FOO_NAME", "")
+
+	os.Setenv("NAME", "foobar")
+
+	err := envconfig.InitWithPrefix(&conf, "FOO")
+	fmt.Println(err)
+
+	os.Setenv("FOO_NAME", "foobar")
+	err = envconfig.InitWithPrefix(&conf, "FOO")
+	fmt.Println(err)
+
+	fmt.Println(conf.Name)
+	// Output:
+	// envconfig: key FOO_NAME not found
+	// <nil>
+	// foobar
+}
