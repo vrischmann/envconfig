@@ -26,6 +26,12 @@ Once you have that, you need to initialize the configuration:
 Then it's just a matter of setting the environment variables when calling your binary:
 
     ADDR=localhost PORT=6379 AUTH_KEY=foobar ./mybinary
+    
+Layout of the conf struct
+
+Your conf struct must follow the following rules:
+ - no unexported fields
+ - only supported types (no map fields for example)
 
 Naming of the keys
 

@@ -268,6 +268,17 @@ func TestParsePrefixedStruct(t *testing.T) {
 	equals(t, "good", conf.Name)
 }
 
+func TestUnexportedField(t *testing.T) {
+	var conf struct {
+		name string
+	}
+	
+	os.Setenv("NAME", "foobar")
+	
+	err := envconfig.Init(&conf)
+	equals(t, envconfig.ErrUnexportedField, err)
+}
+
 // assert fails the test if the condition is false.
 func assert(tb testing.TB, condition bool, msg string, v ...interface{}) {
 	if !condition {

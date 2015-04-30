@@ -10,6 +10,10 @@ import (
 	"time"
 )
 
+var (
+	ErrUnexportedField = errors.New("envconfig: unexported field")
+)
+
 // Unmarshaler is the interface implemented by objects that can unmarshal
 // a environment variable string of themselves.
 type Unmarshaler interface {
@@ -152,6 +156,10 @@ func isUnmarshaler(t reflect.Type) bool {
 }
 
 func parseValue(v reflect.Value, str string) (err error) {
+	if !v.CanSet() {
+		return ErrUnexportedField
+	}
+	
 	vtype := v.Type()
 
 	// Special case for Unmarshaler
