@@ -131,6 +131,17 @@ func TestDurationConfig(t *testing.T) {
 	equals(t, time.Minute*1, conf.Timeout)
 }
 
+func TestInvalidDurationConfig(t *testing.T) {
+	var conf struct {
+		Timeout time.Duration
+	}
+
+	os.Setenv("TIMEOUT", "foo")
+
+	err := envconfig.Init(&conf)
+	assert(t, err != nil, "err should not be nil")
+}
+
 func TestAllPointerConfig(t *testing.T) {
 	var conf struct {
 		Name   *string
@@ -272,9 +283,9 @@ func TestUnexportedField(t *testing.T) {
 	var conf struct {
 		name string
 	}
-	
+
 	os.Setenv("NAME", "foobar")
-	
+
 	err := envconfig.Init(&conf)
 	equals(t, envconfig.ErrUnexportedField, err)
 }
