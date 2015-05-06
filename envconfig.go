@@ -159,7 +159,7 @@ func parseValue(v reflect.Value, str string) (err error) {
 	if !v.CanSet() {
 		return ErrUnexportedField
 	}
-	
+
 	vtype := v.Type()
 
 	// Special case for Unmarshaler
@@ -172,7 +172,7 @@ func parseValue(v reflect.Value, str string) (err error) {
 		return parseDuration(v, str)
 	}
 
-	kind := v.Type().Kind()
+	kind := vtype.Kind()
 	switch kind {
 	case reflect.Bool:
 		err = parseBoolValue(v, str)
@@ -217,7 +217,7 @@ func parseWithUnmarshaler(v reflect.Value, str string) error {
 func parseDuration(v reflect.Value, str string) error {
 	d, err := time.ParseDuration(str)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	v.SetInt(int64(d))
