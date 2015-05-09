@@ -110,6 +110,9 @@ func setField(value reflect.Value, name string, customName, optional bool) (err 
 	if err != nil {
 		return err
 	}
+	if len(str) == 0 && optional {
+		return nil
+	}
 
 	switch value.Kind() {
 	case reflect.Slice:
