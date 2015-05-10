@@ -73,6 +73,18 @@ func TestParseBoolConfig(t *testing.T) {
 	equals(t, true, conf.DoIt)
 }
 
+func TestParseBytesConfig(t *testing.T) {
+	var conf struct {
+		Data []byte
+	}
+
+	os.Setenv("DATA", "Rk9PQkFS")
+
+	err := envconfig.Init(&conf)
+	ok(t, err)
+	equals(t, []byte("FOOBAR"), conf.Data)
+}
+
 func TestParseFloatConfig(t *testing.T) {
 	var conf struct {
 		Delta  float32
