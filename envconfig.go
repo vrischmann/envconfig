@@ -1,6 +1,7 @@
 package envconfig
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"os"
@@ -113,6 +114,8 @@ func readStruct(value reflect.Value, parentName string, optional bool) (err erro
 	return
 }
 
+var byteSliceType = reflect.TypeOf([]byte(nil))
+
 func setField(value reflect.Value, name string, customName, optional bool) (err error) {
 	str, err := readValue(name, customName, optional)
 	if err != nil {
@@ -124,6 +127,9 @@ func setField(value reflect.Value, name string, customName, optional bool) (err 
 
 	switch value.Kind() {
 	case reflect.Slice:
+		if value.Type() == byteSliceType {
+			return parseBytesValue(value, str)
+		}
 		return setSliceField(value, str)
 	default:
 		return parseValue(value, str)
@@ -296,6 +302,16 @@ func parseFloatValue(v reflect.Value, str string) error {
 		return err
 	}
 	v.SetFloat(val)
+
+	return nil
+}
+
+func parseBytesValue(v reflect.Value, str string) error {
+	val, err := base64.StdEncoding.DecodeString(str)
+	if err != nil {
+		return err
+	}
+	v.SetBytes(val)
 
 	return nil
 }
