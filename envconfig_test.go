@@ -225,10 +225,29 @@ func TestUnmarshaler(t *testing.T) {
 
 func TestParseOptionalConfig(t *testing.T) {
 	var conf struct {
-		Name string `envconfig:"optional"`
+		Name    string        `envconfig:"optional"`
+		Flag    bool          `envconfig:"optional"`
+		Timeout time.Duration `envconfig:"optional"`
+		Port    int           `envconfig:"optional"`
+		Port2   uint          `envconfig:"optional"`
+		Delta   float32       `envconfig:"optional"`
+		DeltaV  float64       `envconfig:"optional"`
+		Slice   []string      `envconfig:"optional"`
+		Struct  struct {
+			A string
+			B int
+		} `envconfig:"optional"`
 	}
 
 	os.Setenv("NAME", "")
+	os.Setenv("FLAG", "")
+	os.Setenv("TIMEOUT", "")
+	os.Setenv("PORT", "")
+	os.Setenv("PORT2", "")
+	os.Setenv("DELTA", "")
+	os.Setenv("DELTAV", "")
+	os.Setenv("SLICE", "")
+	os.Setenv("STRUCT", "")
 
 	err := envconfig.Init(&conf)
 	ok(t, err)
