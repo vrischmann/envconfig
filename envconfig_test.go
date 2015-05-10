@@ -254,6 +254,18 @@ func TestParseOptionalConfig(t *testing.T) {
 	equals(t, "", conf.Name)
 }
 
+func TestParseSkippableConfig(t *testing.T) {
+	var conf struct {
+		Flag bool `envconfig:"-"`
+	}
+
+	os.Setenv("FLAG", "true")
+
+	err := envconfig.Init(&conf)
+	ok(t, err)
+	equals(t, false, conf.Flag)
+}
+
 func TestParseCustomNameConfig(t *testing.T) {
 	var conf struct {
 		Name string `envconfig:"customName"`
