@@ -18,6 +18,9 @@ func ExampleInit() {
 				Password string
 				Name     string
 			}
+			Params struct {
+				Charset string `envconfig:"-"`
+			}
 		}
 		Log struct {
 			Path   string
