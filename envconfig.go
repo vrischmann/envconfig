@@ -49,6 +49,7 @@ func InitWithPrefix(conf interface{}, prefix string) error {
 type tag struct {
 	customName string
 	optional   bool
+	skip       bool
 }
 
 func parseTag(s string) *tag {
@@ -60,9 +61,12 @@ func parseTag(s string) *tag {
 	}
 
 	for _, v := range tokens {
-		if v == "optional" {
+		switch v {
+		case "-":
+			tag.skip = true
+		case "optional":
 			tag.optional = true
-		} else {
+		default:
 			tag.customName = v
 		}
 	}
@@ -82,6 +86,10 @@ func readStruct(value reflect.Value, parentName string, optional bool) (err erro
 			combinedName = tag.customName
 		} else {
 			combinedName = combineName(parentName, name)
+		}
+
+		if tag.skip {
+			continue
 		}
 
 	doRead:
