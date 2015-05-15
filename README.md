@@ -23,13 +23,15 @@ How does it work
 
 For example:
 
-    var conf struct {
-        Name string
-        Shard struct {
-            Host string
-            Port int
-        }
+```go
+var conf struct {
+    Name string
+    Shard struct {
+        Host string
+        Port int
     }
+}
+```
 
 This will check for those 3 keys:
 
@@ -42,26 +44,30 @@ them with a *,* (will probably be configurable in the future, or at least have a
 
 For example:
 
-    var conf struct {
-        Ports []int
-    }
+```go
+var conf struct {
+    Ports []int
+}
+```
 
 This will check for the key __PORTS__:
 
   * if your variable is *9000* the slice will contain only 9000
   * if your variable is *9000,100* the slice will contain 9000 and 100
 
-For slices of structs, it's a little more complicated. The same splitting of slice elements is done with a *,* however, each token must follow
+For slices of structs, it's a little more complicated. The same splitting of slice elements is done with a *comma*, however, each token must follow
 a specific format like this: *{<first field>,<second field>,...}*
 
 For example:
 
-    var conf struct {
-        Shards []struct {
-            Name string
-            Port int
-        }
+```go
+var conf struct {
+    Shards []struct {
+        Name string
+        Port int
     }
+}
+```
 
 This will check for the key __SHARDS__. Example variable content: `{foobar,9000},{barbaz,20000}`
 
