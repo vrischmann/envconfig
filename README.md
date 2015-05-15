@@ -56,7 +56,7 @@ This will check for the key __PORTS__:
   * if your variable is *9000,100* the slice will contain 9000 and 100
 
 For slices of structs, it's a little more complicated. The same splitting of slice elements is done with a *comma*, however, each token must follow
-a specific format like this: *{<first field>,<second field>,...}*
+a specific format like this: `{<first field>,<second field>,...}`
 
 For example:
 
