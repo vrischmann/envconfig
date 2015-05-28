@@ -22,10 +22,6 @@ func TestParseSimpleConfig(t *testing.T) {
 		}
 	}
 
-	// Go 1.2 and 1.3 don't have os.Unsetenv
-	os.Setenv("NAME", "")
-	os.Setenv("LOG_PATH", "")
-
 	err := envconfig.Init(&conf)
 	equals(t, "envconfig: key NAME not found", err.Error())
 
@@ -39,6 +35,10 @@ func TestParseSimpleConfig(t *testing.T) {
 
 	equals(t, "foobar", conf.Name)
 	equals(t, "/var/log/foobar", conf.Log.Path)
+
+	// Clean up at the end of the test - some tests share the same key and we don't values to be seen by those tests
+	os.Setenv("NAME", "")
+	os.Setenv("LOG_PATH", "")
 }
 
 func TestParseIntegerConfig(t *testing.T) {
