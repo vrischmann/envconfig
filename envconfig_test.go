@@ -372,6 +372,7 @@ func TestParseDefaultVal(t *testing.T) {
 				Address string `envconfig:"default=localhost"`
 				Port    int    `envconfig:"default=3306"`
 			}
+			Timeout time.Duration `envconfig:"default=1m,myTimeout"`
 		}
 	}
 
@@ -379,6 +380,15 @@ func TestParseDefaultVal(t *testing.T) {
 	ok(t, err)
 	equals(t, "localhost", conf.MySQL.Master.Address)
 	equals(t, 3306, conf.MySQL.Master.Port)
+	equals(t, time.Minute*1, conf.MySQL.Timeout)
+
+	os.Setenv("myTimeout", "2m")
+
+	err = envconfig.Init(&conf)
+	ok(t, err)
+	equals(t, "localhost", conf.MySQL.Master.Address)
+	equals(t, 3306, conf.MySQL.Master.Port)
+	equals(t, time.Minute*2, conf.MySQL.Timeout)
 }
 
 // assert fails the test if the condition is false.
