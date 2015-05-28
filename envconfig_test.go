@@ -365,6 +365,22 @@ func TestSliceTypeWithUnmarshaler(t *testing.T) {
 	equals(t, 3, conf.Data[2])
 }
 
+func TestParseDefaultVal(t *testing.T) {
+	var conf struct {
+		MySQL struct {
+			Master struct {
+				Address string `envconfig:"default=localhost"`
+				Port    int    `envconfig:"default=3306"`
+			}
+		}
+	}
+
+	err := envconfig.Init(&conf)
+	ok(t, err)
+	equals(t, "localhost", conf.MySQL.Master.Address)
+	equals(t, 3306, conf.MySQL.Master.Port)
+}
+
 // assert fails the test if the condition is false.
 func assert(tb testing.TB, condition bool, msg string, v ...interface{}) {
 	if !condition {
