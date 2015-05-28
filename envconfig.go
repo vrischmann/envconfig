@@ -15,6 +15,13 @@ var (
 	ErrUnexportedField = errors.New("envconfig: unexported field")
 )
 
+type context struct {
+	name       string
+	customName string
+	optional   bool
+	defaultVal string
+}
+
 // Unmarshaler is the interface implemented by objects that can unmarshal
 // a environment variable string of themselves.
 type Unmarshaler interface {
@@ -39,9 +46,9 @@ func InitWithPrefix(conf interface{}, prefix string) error {
 	switch elem.Kind() {
 	case reflect.Ptr:
 		elem.Set(reflect.New(elem.Type().Elem()))
-		return readStruct(elem.Elem(), prefix, false)
+		return readStruct(elem.Elem(), &context{name: prefix})
 	case reflect.Struct:
-		return readStruct(elem, prefix, false)
+		return readStruct(elem, &context{name: prefix})
 	default:
 		return errors.New("envconfig: invalid value kind, only works on structs")
 	}
@@ -51,6 +58,7 @@ type tag struct {
 	customName string
 	optional   bool
 	skip       bool
+	defaultVal string
 }
 
 func parseTag(s string) *tag {
@@ -62,11 +70,13 @@ func parseTag(s string) *tag {
 	}
 
 	for _, v := range tokens {
-		switch v {
-		case "-":
+		switch {
+		case v == "-":
 			tag.skip = true
-		case "optional":
+		case v == "optional":
 			tag.optional = true
+		case strings.HasPrefix(v, "default="):
+			tag.defaultVal = strings.TrimPrefix(v, "default=")
 		default:
 			tag.customName = v
 		}
@@ -75,20 +85,12 @@ func parseTag(s string) *tag {
 	return tag
 }
 
-func readStruct(value reflect.Value, parentName string, optional bool) (err error) {
+func readStruct(value reflect.Value, ctx *context) (err error) {
 	for i := 0; i < value.NumField(); i++ {
 		field := value.Field(i)
 		name := value.Type().Field(i).Name
 
 		tag := parseTag(value.Type().Field(i).Tag.Get("envconfig"))
-
-		var combinedName string
-		if tag.customName != "" {
-			combinedName = tag.customName
-		} else {
-			combinedName = combineName(parentName, name)
-		}
-
 		if tag.skip {
 			continue
 		}
@@ -101,9 +103,18 @@ func readStruct(value reflect.Value, parentName string, optional bool) (err erro
 			field = field.Elem()
 			goto doRead
 		case reflect.Struct:
-			err = readStruct(field, combinedName, optional || tag.optional)
+			err = readStruct(field, &context{
+				name:       combineName(ctx.name, name),
+				optional:   ctx.optional || tag.optional,
+				defaultVal: tag.defaultVal,
+			})
 		default:
-			err = setField(field, combinedName, tag.customName != "", optional || tag.optional)
+			err = setField(field, &context{
+				name:       combineName(ctx.name, name),
+				customName: tag.customName,
+				optional:   ctx.optional || tag.optional,
+				defaultVal: tag.defaultVal,
+			})
 		}
 
 		if err != nil {
@@ -116,12 +127,12 @@ func readStruct(value reflect.Value, parentName string, optional bool) (err erro
 
 var byteSliceType = reflect.TypeOf([]byte(nil))
 
-func setField(value reflect.Value, name string, customName, optional bool) (err error) {
-	str, err := readValue(name, customName, optional)
+func setField(value reflect.Value, ctx *context) (err error) {
+	str, err := readValue(ctx)
 	if err != nil {
 		return err
 	}
-	if len(str) == 0 && optional {
+	if len(str) == 0 && ctx.optional {
 		return nil
 	}
 
@@ -317,13 +328,6 @@ func parseBytesValue(v reflect.Value, str string) error {
 	return nil
 }
 
-func nameToKey(name string) string {
-	s := strings.Replace(name, ".", "_", -1)
-	s = strings.ToUpper(s)
-
-	return s
-}
-
 func combineName(parentName, name string) string {
 	if parentName == "" {
 		return name
@@ -332,10 +336,13 @@ func combineName(parentName, name string) string {
 	return parentName + "." + name
 }
 
-func readValue(name string, customName, optional bool) (string, error) {
-	key := name
-	if !customName {
-		key = nameToKey(name)
+func readValue(ctx *context) (string, error) {
+	var key string
+	if ctx.customName == "" {
+		key = strings.Replace(ctx.name, ".", "_", -1)
+		key = strings.ToUpper(key)
+	} else {
+		key = ctx.customName
 	}
 
 	str := os.Getenv(key)
@@ -343,8 +350,12 @@ func readValue(name string, customName, optional bool) (string, error) {
 		return str, nil
 	}
 
-	if optional {
-		return str, nil
+	if ctx.defaultVal != "" {
+		return ctx.defaultVal, nil
+	}
+
+	if ctx.optional {
+		return "", nil
 	}
 
 	return "", fmt.Errorf("envconfig: key %v not found", key)

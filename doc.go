@@ -26,7 +26,7 @@ Once you have that, you need to initialize the configuration:
 Then it's just a matter of setting the environment variables when calling your binary:
 
     ADDR=localhost PORT=6379 AUTH_KEY=foobar ./mybinary
-    
+
 Layout of the conf struct
 
 Your conf struct must follow the following rules:
@@ -80,15 +80,60 @@ Example of a valid struct value:
 Example of a valid slice of struct values:
     {foobar,10,120s},{barbaz,20,50s}
 
+Special case for bytes slices
+
+For bytes slices, you generally don't want to type out a comma-separated list of byte values.
+
+For this use case, we support base64 encoded values.
+
+Here's an example:
+
+    var conf struct {
+        Data []byte
+    }
+
+    os.Setenv("DATA", "Rk9PQkFS")
+
+This will decode DATA to FOOBAR and put that into conf.Data.
+
 Optional values
 
 Sometimes you don't absolutely need a value. Here's how we tell envconfig a value is optional:
 
     var conf struct {
         Name string `envconfig:"optional"`
+        Age int     `envconfig:"-"`
     }
 
+The two syntax are equivalent.
+
+Default values
+
+Often times you have configuration keys which almost never changes, but you still want to be able to change them.
+
+In such cases, you might want to provide a default value.
+
+Here's to do this with envconfig:
+
+    var conf struct {
+        Timeout time.Duration `envconfig:"default=1m"`
+    }
+
+Combining options
+
+You can of course combine multiple options. The syntax is simple enough, separate each option with a comma.
+
+For example:
+
+    ar conf struct {
+        Timeout time.Duration `envconfig:"default=1m,myTimeout"`
+    }
+
+This would give you the default timeout of 1 minute, and lookup the myTimeout environment variable.
+
 Supported types
+
+envconfig supports the following list of types:
 
  - bool
  - string
@@ -97,6 +142,8 @@ Supported types
  - floatX
  - time.Duration
  - pointers to all of the above types
+
+Notably, we don't (yet) support complex types simply because I had no use for it yet.
 
 Custom unmarshaler
 
