@@ -39,6 +39,9 @@ This will check for those 3 keys:
   * SHARD\_HOST
   * SHARD\_PORT
 
+Slices or arrays
+----------------
+
 With slices or arrays, the same naming is applied for the slice. To put multiple elements into the slice or array, you need to separate
 them with a *,* (will probably be configurable in the future, or at least have a way to escape)
 
@@ -73,9 +76,55 @@ This will check for the key __SHARDS__. Example variable content: `{foobar,9000}
 
 This will result in two struct defined in the *Shards* slice.
 
+Custom environment variable names
+---------------------------------
+
+*envconfig* supports custom environment variable names:
+
+```go
+var conf struct {
+    Name string `envconfig:"myName"`
+}
+```
+
+Default values
+--------------
+
+*envconfig* supports default values:
+
+```go
+var conf struct {
+    Name string `envconfig:"default=Vincent"`
+}
+```
+
+Optional values
+---------------
+
+*envconfig* supports optional values:
+
+```go
+var conf struct {
+    Name string `envconfig:"optional"`
+    Age int     `envconfig:"-"`
+}
+```
+
+The two syntax are equivalent.
+
+Combining multiple options in one tag
+-------------------------------------
+
+You can of course combine multiple options:
+
+```go
+var conf struct {
+    Name string `envconfig:"default=Vincent,myName"`
+}
+```
+
 Future work
 -----------
 
-  * support for defaut values ? don't know how to yet
   * support for time.Time values with a layout defined via a field tag
   * support for complex types
