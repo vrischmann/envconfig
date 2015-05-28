@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -331,6 +332,37 @@ func TestUnexportedField(t *testing.T) {
 
 	err := envconfig.Init(&conf)
 	equals(t, envconfig.ErrUnexportedField, err)
+}
+
+type sliceWithUnmarshaler []int
+
+func (sl *sliceWithUnmarshaler) Unmarshal(s string) error {
+	tokens := strings.Split(s, ".")
+	for _, tok := range tokens {
+		tmp, err := strconv.Atoi(tok)
+		if err != nil {
+			return err
+		}
+
+		*sl = append(*sl, tmp)
+	}
+
+	return nil
+}
+
+func TestSliceTypeWithUnmarshaler(t *testing.T) {
+	var conf struct {
+		Data sliceWithUnmarshaler
+	}
+
+	os.Setenv("DATA", "1.2.3")
+
+	err := envconfig.Init(&conf)
+	ok(t, err)
+	equals(t, 3, len(conf.Data))
+	equals(t, 1, conf.Data[0])
+	equals(t, 2, conf.Data[1])
+	equals(t, 3, conf.Data[2])
 }
 
 // assert fails the test if the condition is false.

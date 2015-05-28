@@ -125,8 +125,9 @@ func setField(value reflect.Value, name string, customName, optional bool) (err 
 		return nil
 	}
 
-	switch value.Kind() {
-	case reflect.Slice:
+	vkind := value.Kind()
+	switch {
+	case vkind == reflect.Slice && !isUnmarshaler(value.Type()):
 		if value.Type() == byteSliceType {
 			return parseBytesValue(value, str)
 		}
