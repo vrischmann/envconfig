@@ -35,27 +35,51 @@ Your conf struct must follow the following rules:
 
 Naming of the keys
 
-By default, keys must follow a specific naming scheme:
- - all uppercase
- - a single _ to go down a level in the hierarchy of the struct
+By default, envconfig generates all possible keys based on the field chain according to a flexible naming scheme.
 
-Examples:
- - ADDR
- - AUTH_ENDPOINT
- - PARTITIONS
-
-You can override the expected name of the key for a single field using a field tag:
+The field chain is how you access your field in the configuration struct. For example:
 
     var conf struct {
-        Name `envconfig:"customName"`
+        Shard struct {
+            Name string
+        }
     }
 
-Now envconfig will read the environment variable named "customName".
+With that struct, you access the name field via the chain *Shard.Name*
+
+The default naming scheme takes that and transforms it into the following:
+ - SHARD_NAME
+ - shard_name
+
+It can handles more complicated cases, with multiple words in one field name. It needs to be in the correct case though, for example:
+
+    var conf struct {
+        Cassandra struct {
+            SSLCert string
+            SslKey  string
+        }
+    }
+
+With that struct, you access the name field via the chain *Cassandra.SSLCert* or *Cassandra.SslKey*
+
+The default naming scheme takes that and transforms it into the following:
+ - CASSANDRA_SSL_CERT, cassandra_ssl_cert, CASSANDRA_SSLCERT, cassandra_sslcert
+ - CASSANDRA_SSL_KEY, cassandra_ssl_key, CASSANDRA_SSLKEY, cassandra_sslkey
+
+And, if that is not good enough for you, you always have the option to use a custom key:
+
+    var conf struct {
+        Cassandra struct {
+            Name string `envconfig:"cassandraMyName"`
+        }
+    }
+
+Now envconfig will only ever checks the environment variable _cassandraMyName_.
+
 
 Content of the variables
 
 There are three types of content for a single variable:
-
  - for simple types, a single string representing the value, and parseable into the type.
  - for slices or arrays, a comma-separated list of strings. Each string must be parseable into the element type of the slice or array.
  - for structs, a comma-separated list of specially formatted strings representing structs.
