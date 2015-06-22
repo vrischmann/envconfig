@@ -28,6 +28,10 @@ func ExampleInit() {
 		}
 		NbWorkers int
 		Timeout   time.Duration
+		Cassandra struct {
+			SSLCert string
+			SSLKey  string
+		}
 	}
 
 	os.Setenv("MYSQL_HOST", "localhost")
@@ -38,6 +42,8 @@ func ExampleInit() {
 	os.Setenv("logRotate", "true")
 	os.Setenv("NBWORKERS", "10")
 	os.Setenv("TIMEOUT", "120s")
+	os.Setenv("CASSANDRA_SSL_CERT", "/etc/cassandra/ssl.crt")
+	os.Setenv("CASSANDRA_SSL_KEY", "/etc/cassandra/ssl.key")
 
 	if err := envconfig.Init(&conf); err != nil {
 		fmt.Printf("err=%s\n", err)
@@ -47,11 +53,15 @@ func ExampleInit() {
 	fmt.Println(conf.Log.Rotate)
 	fmt.Println(conf.Timeout)
 	fmt.Println(conf.Log.Path)
+	fmt.Println(conf.Cassandra.SSLCert)
+	fmt.Println(conf.Cassandra.SSLKey)
 	// Output:
 	// root
 	// true
 	// 2m0s
 	// /var/log/mylog.log
+	// /etc/cassandra/ssl.crt
+	// /etc/cassandra/ssl.key
 }
 
 func ExampleInitWithPrefix() {
@@ -73,7 +83,7 @@ func ExampleInitWithPrefix() {
 
 	fmt.Println(conf.Name)
 	// Output:
-	// envconfig: key FOO_NAME not found
+	// envconfig: keys FOO_NAME, foo_name not found
 	// <nil>
 	// foobar
 }

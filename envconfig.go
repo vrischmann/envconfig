@@ -1,14 +1,17 @@
 package envconfig
 
 import (
+	"bytes"
 	"encoding/base64"
 	"errors"
 	"fmt"
 	"os"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 )
 
 var (
@@ -337,15 +340,17 @@ func combineName(parentName, name string) string {
 }
 
 func readValue(ctx *context) (string, error) {
-	var key string
-	if ctx.customName == "" {
-		key = strings.Replace(ctx.name, ".", "_", -1)
-		key = strings.ToUpper(key)
-	} else {
-		key = ctx.customName
+	keys := makeAllPossibleKeys(ctx)
+	var str string
+	{
+		for _, key := range keys {
+			str = os.Getenv(key)
+			if str != "" {
+				break
+			}
+		}
 	}
 
-	str := os.Getenv(key)
 	if str != "" {
 		return str, nil
 	}
@@ -358,5 +363,52 @@ func readValue(ctx *context) (string, error) {
 		return "", nil
 	}
 
-	return "", fmt.Errorf("envconfig: key %v not found", key)
+	return "", fmt.Errorf("envconfig: keys %s not found", strings.Join(keys, ", "))
+}
+
+func makeAllPossibleKeys(ctx *context) (res []string) {
+	if ctx.customName != "" {
+		return []string{ctx.customName}
+	}
+
+	tmp := make(map[string]struct{})
+	{
+		n := []rune(ctx.name)
+
+		var buf bytes.Buffer  // this is the buffer where we put extra underscores on "word" boundaries
+		var buf2 bytes.Buffer // this is the buffer with the standard naming scheme
+
+		wroteUnderscore := false
+		for i, r := range ctx.name {
+			if r == '.' {
+				buf.WriteRune('_')
+				buf2.WriteRune('_')
+				wroteUnderscore = true
+				continue
+			}
+
+			prevOrNextLower := i+1 < len(n) && i-1 > 0 && (unicode.IsLower(n[i+1]) || unicode.IsLower(n[i-1]))
+			if i > 0 && unicode.IsUpper(r) && prevOrNextLower && !wroteUnderscore {
+				buf.WriteRune('_')
+			}
+
+			buf.WriteRune(r)
+			buf2.WriteRune(r)
+
+			wroteUnderscore = false
+		}
+
+		tmp[strings.ToLower(buf.String())] = struct{}{}
+		tmp[strings.ToUpper(buf.String())] = struct{}{}
+		tmp[strings.ToLower(buf2.String())] = struct{}{}
+		tmp[strings.ToUpper(buf2.String())] = struct{}{}
+	}
+
+	for k, _ := range tmp {
+		res = append(res, k)
+	}
+
+	sort.Strings(res)
+
+	return
 }

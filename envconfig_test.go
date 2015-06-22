@@ -23,11 +23,11 @@ func TestParseSimpleConfig(t *testing.T) {
 	}
 
 	err := envconfig.Init(&conf)
-	equals(t, "envconfig: key NAME not found", err.Error())
+	equals(t, "envconfig: keys NAME, name not found", err.Error())
 
 	os.Setenv("NAME", "foobar")
 	err = envconfig.Init(&conf)
-	equals(t, "envconfig: key LOG_PATH not found", err.Error())
+	equals(t, "envconfig: keys LOG_PATH, log_path not found", err.Error())
 
 	os.Setenv("LOG_PATH", "/var/log/foobar")
 	err = envconfig.Init(&conf)
