@@ -35,9 +35,30 @@ var conf struct {
 
 This will check for those 3 keys:
 
-  * NAME
-  * SHARD\_HOST
-  * SHARD\_PORT
+  * NAME or name
+  * SHARD\_HOST, or shard\_host
+  * SHARD\_PORT, or shard\_port
+
+Flexible key naming
+-------------------
+
+*envconfig* supports having underscores in the key names where there is a _word boundary_. Now, that term is not super explicit, so let me show you an example:
+
+```go
+var conf struct {
+    Cassandra struct {
+        SSLCert string
+        SslKey string
+    }
+}
+```
+
+This will check all of the following keys:
+
+  * CASSANDRA\_SSL\_CERT, CASSANDRA\_SSLCERT, cassandra\_ssl\_cert, cassandra\_sslcert
+  * CASSANDRA\_SSL\_KEY, CASSANDRA\_SSLKEY, cassandra\_ssl\_key, cassandra\_sslkey
+
+If that is not good enough, look just below.
 
 Custom environment variable names
 ---------------------------------
