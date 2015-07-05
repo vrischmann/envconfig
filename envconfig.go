@@ -15,6 +15,7 @@ import (
 )
 
 var (
+	// ErrUnexportedField is the error returned by Init and InitWithPrefix when a field of the config struct is not exported.
 	ErrUnexportedField = errors.New("envconfig: unexported field")
 )
 
