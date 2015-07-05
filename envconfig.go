@@ -405,7 +405,7 @@ func makeAllPossibleKeys(ctx *context) (res []string) {
 		tmp[strings.ToUpper(buf2.String())] = struct{}{}
 	}
 
-	for k, _ := range tmp {
+	for k := range tmp {
 		res = append(res, k)
 	}
 
