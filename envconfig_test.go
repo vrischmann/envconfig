@@ -388,3 +388,8 @@ func TestParseDefaultVal(t *testing.T) {
 	require.Equal(t, 3306, conf.MySQL.Master.Port)
 	require.Equal(t, time.Minute*2, conf.MySQL.Timeout)
 }
+
+func TestInitNotAPointer(t *testing.T) {
+	err := envconfig.Init("foobar")
+	require.Equal(t, envconfig.ErrNotAPointer, err)
+}

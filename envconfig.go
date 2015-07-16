@@ -17,6 +17,8 @@ import (
 var (
 	// ErrUnexportedField is the error returned by Init and InitWithPrefix when a field of the config struct is not exported.
 	ErrUnexportedField = errors.New("envconfig: unexported field")
+	// ErrNotAPointer is the error returned by Init and InitWithPrefix when the configuration object is not a pointer.
+	ErrNotAPointer = errors.New("envconfig: value is not a pointer")
 )
 
 type context struct {
@@ -42,7 +44,7 @@ func Init(conf interface{}) error {
 func InitWithPrefix(conf interface{}, prefix string) error {
 	value := reflect.ValueOf(conf)
 	if value.Kind() != reflect.Ptr {
-		return errors.New("envconfig: value is not a pointer")
+		return ErrNotAPointer
 	}
 
 	elem := value.Elem()
