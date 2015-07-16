@@ -1,11 +1,9 @@
 package envconfig
 
 import (
-	"fmt"
-	"path/filepath"
-	"reflect"
-	"runtime"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestSliceTokenizer(t *testing.T) {
@@ -13,19 +11,19 @@ func TestSliceTokenizer(t *testing.T) {
 	tnz := newSliceTokenizer(str)
 
 	b := tnz.scan()
-	ok(t, tnz.Err())
-	equals(t, true, b)
+	require.Nil(t, tnz.Err())
+	require.Equal(t, true, b)
 
-	equals(t, "foobar", tnz.text())
-
-	b = tnz.scan()
-	ok(t, tnz.Err())
-	equals(t, true, b)
-	equals(t, "barbaz", tnz.text())
+	require.Equal(t, "foobar", tnz.text())
 
 	b = tnz.scan()
-	ok(t, tnz.Err())
-	equals(t, false, b)
+	require.Nil(t, tnz.Err())
+	require.Equal(t, true, b)
+	require.Equal(t, "barbaz", tnz.text())
+
+	b = tnz.scan()
+	require.Nil(t, tnz.Err())
+	require.Equal(t, false, b)
 }
 
 func TestSliceOfStructsTokenizer(t *testing.T) {
@@ -33,44 +31,17 @@ func TestSliceOfStructsTokenizer(t *testing.T) {
 	tnz := newSliceTokenizer(str)
 
 	b := tnz.scan()
-	ok(t, tnz.Err())
-	equals(t, true, b)
+	require.Nil(t, tnz.Err())
+	require.Equal(t, true, b)
 
-	equals(t, "{foobar,100}", tnz.text())
-
-	b = tnz.scan()
-	ok(t, tnz.Err())
-	equals(t, true, b)
-	equals(t, "{barbaz,200}", tnz.text())
+	require.Equal(t, "{foobar,100}", tnz.text())
 
 	b = tnz.scan()
-	ok(t, tnz.Err())
-	equals(t, false, b)
-}
+	require.Nil(t, tnz.Err())
+	require.Equal(t, true, b)
+	require.Equal(t, "{barbaz,200}", tnz.text())
 
-// assert fails the test if the condition is false.
-func assert(tb testing.TB, condition bool, msg string, v ...interface{}) {
-	if !condition {
-		_, file, line, _ := runtime.Caller(1)
-		fmt.Printf("\033[31m%s:%d: "+msg+"\033[39m\n\n", append([]interface{}{filepath.Base(file), line}, v...)...)
-		tb.FailNow()
-	}
-}
-
-// ok fails the test if an err is not nil.
-func ok(tb testing.TB, err error) {
-	if err != nil {
-		_, file, line, _ := runtime.Caller(1)
-		fmt.Printf("\033[31m%s:%d: unexpected error: %s\033[39m\n\n", filepath.Base(file), line, err.Error())
-		tb.FailNow()
-	}
-}
-
-// equals fails the test if exp is not equal to act.
-func equals(tb testing.TB, exp, act interface{}) {
-	if !reflect.DeepEqual(exp, act) {
-		_, file, line, _ := runtime.Caller(1)
-		fmt.Printf("\033[31m%s:%d:\n\n\texp: %#v\n\n\tgot: %#v\033[39m\n\n", filepath.Base(file), line, exp, act)
-		tb.FailNow()
-	}
+	b = tnz.scan()
+	require.Nil(t, tnz.Err())
+	require.Equal(t, false, b)
 }
