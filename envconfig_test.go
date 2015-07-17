@@ -393,3 +393,16 @@ func TestInitNotAPointer(t *testing.T) {
 	err := envconfig.Init("foobar")
 	require.Equal(t, envconfig.ErrNotAPointer, err)
 }
+
+func TestInitPointerToAPointer(t *testing.T) {
+	type Conf struct {
+		Name string
+	}
+	var tmp *Conf
+
+	os.Setenv("NAME", "foobar")
+
+	err := envconfig.Init(&tmp)
+	require.Nil(t, err)
+	require.Equal(t, "foobar", tmp.Name)
+}
