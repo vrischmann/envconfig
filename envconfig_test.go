@@ -406,3 +406,9 @@ func TestInitPointerToAPointer(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, "foobar", tmp.Name)
 }
+
+func TestInitInvalidValueKind(t *testing.T) {
+	sl := []string{"foo", "bar"}
+	err := envconfig.Init(&sl)
+	require.Equal(t, envconfig.ErrInvalidValueKind, err)
+}
