@@ -412,3 +412,14 @@ func TestInitInvalidValueKind(t *testing.T) {
 	err := envconfig.Init(&sl)
 	require.Equal(t, envconfig.ErrInvalidValueKind, err)
 }
+
+func TestInvalidFieldValueKind(t *testing.T) {
+	var conf struct {
+		Foo interface{}
+	}
+
+	os.Setenv("FOO", "lalala")
+
+	err := envconfig.Init(&conf)
+	require.Equal(t, "envconfig: field kind interface not supported", err.Error())
+}
