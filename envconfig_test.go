@@ -143,6 +143,20 @@ func TestParseStructSliceWrongData(t *testing.T) {
 	require.Equal(t, "envconfig: struct token has 1 fields but struct has 2", err.Error())
 }
 
+func TestParseStructSliceWrongValue(t *testing.T) {
+	var conf struct {
+		Shards []struct {
+			Name string
+			Port int32
+		}
+	}
+
+	os.Setenv("SHARDS", "{foobar,barbaz}")
+
+	err := envconfig.Init(&conf)
+	require.Equal(t, `strconv.ParseInt: parsing "barbaz": invalid syntax`, err.Error())
+}
+
 func TestDurationConfig(t *testing.T) {
 	var conf struct {
 		Timeout time.Duration
