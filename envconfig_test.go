@@ -157,6 +157,33 @@ func TestParseStructSliceWrongValue(t *testing.T) {
 	require.Equal(t, `strconv.ParseInt: parsing "barbaz": invalid syntax`, err.Error())
 }
 
+func TestParseWrongValues(t *testing.T) {
+	var conf struct{ OK bool }
+	os.Setenv("OK", "foobar")
+	err := envconfig.Init(&conf)
+	require.Equal(t, `strconv.ParseBool: parsing "foobar": invalid syntax`, err.Error())
+
+	var conf2 struct{ Port int }
+	os.Setenv("PORT", "foobar")
+	err = envconfig.Init(&conf2)
+	require.Equal(t, `strconv.ParseInt: parsing "foobar": invalid syntax`, err.Error())
+
+	var conf3 struct{ Port uint }
+	os.Setenv("PORT", "foobar")
+	err = envconfig.Init(&conf3)
+	require.Equal(t, `strconv.ParseUint: parsing "foobar": invalid syntax`, err.Error())
+
+	var conf4 struct{ Port float32 }
+	os.Setenv("PORT", "foobar")
+	err = envconfig.Init(&conf4)
+	require.Equal(t, `strconv.ParseFloat: parsing "foobar": invalid syntax`, err.Error())
+
+	var conf5 struct{ Data []byte }
+	os.Setenv("DATA", "foobar")
+	err = envconfig.Init(&conf5)
+	require.Equal(t, "illegal base64 data at input byte 4", err.Error())
+}
+
 func TestDurationConfig(t *testing.T) {
 	var conf struct {
 		Timeout time.Duration
