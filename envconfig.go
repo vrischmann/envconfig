@@ -245,16 +245,11 @@ func parseDuration(v reflect.Value, str string) error {
 	return nil
 }
 
+// NOTE(vincent): this is only called when parsing structs inside a slice.
 func parseStruct(value reflect.Value, token string) error {
 	tokens := strings.Split(token[1:len(token)-1], ",")
-	if len(tokens) == 0 {
-		return errors.New("envconfig: struct token should not be empty")
-	}
-
 	if len(tokens) != value.NumField() {
-		return fmt.Errorf("envconfig: struct token has %d fields but struct has %d",
-			len(tokens), value.NumField(),
-		)
+		return fmt.Errorf("envconfig: struct token has %d fields but struct has %d", len(tokens), value.NumField())
 	}
 
 	for i := 0; i < value.NumField(); i++ {

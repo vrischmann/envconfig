@@ -129,6 +129,20 @@ func TestParseSliceConfig(t *testing.T) {
 	require.Equal(t, "localhost:2828", conf.Shards[1].Addr)
 }
 
+func TestParseStructSliceWrongData(t *testing.T) {
+	var conf struct {
+		Shards []struct {
+			Name string
+			Addr string
+		}
+	}
+
+	os.Setenv("SHARDS", "foobar")
+
+	err := envconfig.Init(&conf)
+	require.Equal(t, "envconfig: struct token has 1 fields but struct has 2", err.Error())
+}
+
 func TestDurationConfig(t *testing.T) {
 	var conf struct {
 		Timeout time.Duration
