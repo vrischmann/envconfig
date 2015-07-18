@@ -70,27 +70,23 @@ type tag struct {
 }
 
 func parseTag(s string) *tag {
-	tag := &tag{}
+	var t tag
 
 	tokens := strings.Split(s, ",")
-	if len(tokens) == 0 {
-		return tag
-	}
-
 	for _, v := range tokens {
 		switch {
 		case v == "-":
-			tag.skip = true
+			t.skip = true
 		case v == "optional":
-			tag.optional = true
+			t.optional = true
 		case strings.HasPrefix(v, "default="):
-			tag.defaultVal = strings.TrimPrefix(v, "default=")
+			t.defaultVal = strings.TrimPrefix(v, "default=")
 		default:
-			tag.customName = v
+			t.customName = v
 		}
 	}
 
-	return tag
+	return &t
 }
 
 func readStruct(value reflect.Value, ctx *context) (err error) {

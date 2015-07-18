@@ -423,3 +423,15 @@ func TestInvalidFieldValueKind(t *testing.T) {
 	err := envconfig.Init(&conf)
 	require.Equal(t, "envconfig: field kind interface not supported", err.Error())
 }
+
+func TestParseEmptyTag(t *testing.T) {
+	var conf struct {
+		Name string `envconfig:""`
+	}
+
+	os.Setenv("NAME", "foobar")
+
+	err := envconfig.Init(&conf)
+	require.Nil(t, err)
+	require.Equal(t, "foobar", conf.Name)
+}
