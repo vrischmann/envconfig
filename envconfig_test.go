@@ -230,8 +230,15 @@ func TestUnmarshaler(t *testing.T) {
 
 	err := envconfig.Init(&conf)
 	require.Nil(t, err)
-
 	require.Equal(t, logFile, conf.LogMode)
+
+	var conf2 struct {
+		LogMode *logMode
+	}
+
+	err = envconfig.Init(&conf2)
+	require.Nil(t, err)
+	require.Equal(t, logFile, *conf2.LogMode)
 }
 
 func TestParseOptionalConfig(t *testing.T) {
