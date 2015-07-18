@@ -233,9 +233,7 @@ func parseWithUnmarshaler(v reflect.Value, str string) error {
 	var u Unmarshaler
 	vtype := v.Type()
 
-	if vtype.Implements(unmarshalerType) {
-		u = v.Interface().(Unmarshaler)
-	} else if reflect.PtrTo(vtype).Implements(unmarshalerType) {
+	if reflect.PtrTo(vtype).Implements(unmarshalerType) {
 		// We know the interface has a pointer receiver, but our value might not be a pointer, so we get one
 		if v.Kind() != reflect.Ptr {
 			u = v.Addr().Interface().(Unmarshaler)
