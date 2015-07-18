@@ -223,7 +223,7 @@ func parseValue(v reflect.Value, str string) (err error) {
 	case reflect.Struct:
 		err = parseStruct(v, str)
 	default:
-		return fmt.Errorf("envconfig: field kind %v not supported", kind)
+		return fmt.Errorf("envconfig: kind %v not supported", kind)
 	}
 
 	return

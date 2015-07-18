@@ -421,7 +421,18 @@ func TestInvalidFieldValueKind(t *testing.T) {
 	os.Setenv("FOO", "lalala")
 
 	err := envconfig.Init(&conf)
-	require.Equal(t, "envconfig: field kind interface not supported", err.Error())
+	require.Equal(t, "envconfig: kind interface not supported", err.Error())
+}
+
+func TestInvalidSliceElementValueKind(t *testing.T) {
+	var conf struct {
+		Foo []interface{}
+	}
+
+	os.Setenv("FOO", "lalala")
+
+	err := envconfig.Init(&conf)
+	require.Equal(t, "envconfig: kind interface not supported", err.Error())
 }
 
 func TestParseEmptyTag(t *testing.T) {
