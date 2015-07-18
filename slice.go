@@ -44,10 +44,10 @@ func (t *sliceTokenizer) scan() bool {
 			return true
 		}
 
-		_, t.err = t.buf.WriteRune(ch)
-		if t.err != nil {
-			return false
-		}
+		// NOTE(vincent): we ignore the WriteRune error here because there is NO WAY
+		// for WriteRune to return an error.
+		// Yep. Seriously. Look here http://golang.org/src/bytes/buffer.go?s=7661:7714#L227
+		_, _ = t.buf.WriteRune(ch)
 	}
 }
 
