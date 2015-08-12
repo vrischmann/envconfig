@@ -21,6 +21,10 @@ var (
 	ErrNotAPointer = errors.New("envconfig: value is not a pointer")
 	// ErrInvalidValueKind is the error returned by Init and InitWithPrefix when the configuration object is not a struct.
 	ErrInvalidValueKind = errors.New("envconfig: invalid value kind, only works on structs")
+
+	// Optional determines whether to not throw errors by default for any key
+	// that is not found. Optional=true means errors will not be thrown.
+	Optional = false
 )
 
 type context struct {
@@ -342,7 +346,7 @@ func readValue(ctx *context) (string, error) {
 		return ctx.defaultVal, nil
 	}
 
-	if ctx.optional {
+	if ctx.optional || Optional {
 		return "", nil
 	}
 
