@@ -24,16 +24,52 @@ var (
 )
 
 type context struct {
-	name       string
-	customName string
-	optional   bool
-	defaultVal string
+	name               string
+	customName         string
+	defaultVal         string
+	parents            []reflect.Value
+	optional, leaveNil bool
+	allowUnexported    bool
 }
 
 // Unmarshaler is the interface implemented by objects that can unmarshal
 // a environment variable string of themselves.
 type Unmarshaler interface {
 	Unmarshal(s string) error
+}
+
+type Options struct {
+	// Prefix allows specifying a prefix for each key.
+	Prefix string
+
+	// AllOptional determines whether to not throw errors by default for any key
+	// that is not found. AllOptional=true means errors will not be thrown.
+	AllOptional bool
+
+	// LeaveNil specifies whether to not create new pointers for any pointer fields
+	// found within the passed config. Rather, it behaves such that if and only if
+	// there is a) a non-empty field in the value or b) a non-empty value that
+	// the pointer is pointing to will a new pointer be created. By default,
+	// LeaveNil=false will create all pointers in all structs if they are nil.
+	//
+	//	var X struct {
+	//		A *struct{
+	//			B string
+	//		}
+	//	}
+	//	envconfig.Init(&X, Options{LeaveNil: true})
+	//
+	// $ ./program
+	//
+	// X.A == nil
+	//
+	// $ A_B="string" ./program
+	//
+	// X.A.B="string" // A will not be nil
+	LeaveNil bool
+
+	// AllowUnexported allows unexported fields to be present in the passed config.
+	AllowUnexported bool
 }
 
 // Init reads the configuration from environment variables and populates the conf object. conf must be a pointer
@@ -44,6 +80,12 @@ func Init(conf interface{}) error {
 // InitWithPrefix reads the configuration from environment variables and populates the conf object. conf must be a pointer.
 // Each key read will be prefixed with the prefix string.
 func InitWithPrefix(conf interface{}, prefix string) error {
+	return InitWithOptions(conf, Options{Prefix: prefix})
+}
+
+// InitWithOptions reads the configuration from environment variables and populates the conf object.
+// conf must be a pointer.
+func InitWithOptions(conf interface{}, opts Options) error {
 	value := reflect.ValueOf(conf)
 	if value.Kind() != reflect.Ptr {
 		return ErrNotAPointer
@@ -51,12 +93,22 @@ func InitWithPrefix(conf interface{}, prefix string) error {
 
 	elem := value.Elem()
 
+	ctx := context{
+		name:            opts.Prefix,
+		optional:        opts.AllOptional,
+		leaveNil:        opts.LeaveNil,
+		allowUnexported: opts.AllowUnexported,
+	}
 	switch elem.Kind() {
 	case reflect.Ptr:
-		elem.Set(reflect.New(elem.Type().Elem()))
-		return readStruct(elem.Elem(), &context{name: prefix})
+		if elem.IsNil() {
+			elem.Set(reflect.New(elem.Type().Elem()))
+		}
+		_, err := readStruct(elem.Elem(), &ctx)
+		return err
 	case reflect.Struct:
-		return readStruct(elem, &context{name: prefix})
+		_, err := readStruct(elem, &ctx)
+		return err
 	default:
 		return ErrInvalidValueKind
 	}
@@ -89,70 +141,94 @@ func parseTag(s string) *tag {
 	return &t
 }
 
-func readStruct(value reflect.Value, ctx *context) (err error) {
+func readStruct(value reflect.Value, ctx *context) (nonnil bool, err error) {
+	var parents []reflect.Value
+
 	for i := 0; i < value.NumField(); i++ {
 		field := value.Field(i)
 		name := value.Type().Field(i).Name
 
 		tag := parseTag(value.Type().Field(i).Tag.Get("envconfig"))
-		if tag.skip {
+		if tag.skip || !field.CanSet() {
+			if !field.CanSet() && !ctx.allowUnexported {
+				return false, ErrUnexportedField
+			}
 			continue
 		}
+
+		parents = ctx.parents
 
 	doRead:
 		switch field.Kind() {
 		case reflect.Ptr:
 			// it's a pointer, create a new value and restart the switch
-			field.Set(reflect.New(field.Type().Elem()))
+			if field.IsNil() {
+				field.Set(reflect.New(field.Type().Elem()))
+				parents = append(parents, field) // track parent pointers to deallocate if no children are filled in
+			}
 			field = field.Elem()
 			goto doRead
 		case reflect.Struct:
-			err = readStruct(field, &context{
+			var nonnilin bool
+			nonnilin, err = readStruct(field, &context{
 				name:       combineName(ctx.name, name),
 				optional:   ctx.optional || tag.optional,
 				defaultVal: tag.defaultVal,
+				parents:    parents,
+				leaveNil:   ctx.leaveNil,
 			})
+			nonnil = nonnil || nonnilin
 		default:
-			err = setField(field, &context{
+			var ok bool
+			ok, err = setField(field, &context{
 				name:       combineName(ctx.name, name),
 				customName: tag.customName,
 				optional:   ctx.optional || tag.optional,
 				defaultVal: tag.defaultVal,
+				parents:    parents,
+				leaveNil:   ctx.leaveNil,
 			})
+			nonnil = nonnil || ok
 		}
 
 		if err != nil {
-			return err
+			return false, err
 		}
 	}
 
-	return
+	if !nonnil && ctx.leaveNil { // re-zero
+		for _, p := range parents {
+			p.Set(reflect.Zero(p.Type()))
+		}
+	}
+
+	return nonnil, err
 }
 
 var byteSliceType = reflect.TypeOf([]byte(nil))
 
-func setField(value reflect.Value, ctx *context) (err error) {
+func setField(value reflect.Value, ctx *context) (ok bool, err error) {
 	str, err := readValue(ctx)
 	if err != nil {
-		return err
+		return false, err
 	}
 	if len(str) == 0 && ctx.optional {
-		return nil
+		return false, nil
 	}
 
 	vkind := value.Kind()
 	switch {
 	case vkind == reflect.Slice && !isUnmarshaler(value.Type()):
 		if value.Type() == byteSliceType {
-			return parseBytesValue(value, str)
+			return true, parseBytesValue(value, str)
 		}
-		return setSliceField(value, str)
+		return true, setSliceField(value, str, ctx)
 	default:
-		return parseValue(value, str)
+		return true, parseValue(value, str, ctx)
 	}
 }
 
-func setSliceField(value reflect.Value, str string) error {
+func setSliceField(value reflect.Value, str string, ctx *context) error {
 	elType := value.Type().Elem()
 	tnz := newSliceTokenizer(str)
 
@@ -163,7 +239,7 @@ func setSliceField(value reflect.Value, str string) error {
 
 		el := reflect.New(elType).Elem()
 
-		if err := parseValue(el, token); err != nil {
+		if err := parseValue(el, token, ctx); err != nil {
 			return err
 		}
 
@@ -188,9 +264,12 @@ func isUnmarshaler(t reflect.Type) bool {
 	return t.Implements(unmarshalerType) || reflect.PtrTo(t).Implements(unmarshalerType)
 }
 
-func parseValue(v reflect.Value, str string) (err error) {
+func parseValue(v reflect.Value, str string, ctx *context) (err error) {
 	if !v.CanSet() {
-		return ErrUnexportedField
+		if !ctx.allowUnexported {
+			return ErrUnexportedField
+		}
+		return nil
 	}
 
 	vtype := v.Type()
@@ -217,11 +296,11 @@ func parseValue(v reflect.Value, str string) (err error) {
 		err = parseFloatValue(v, str)
 	case reflect.Ptr:
 		v.Set(reflect.New(vtype.Elem()))
-		return parseValue(v.Elem(), str)
+		return parseValue(v.Elem(), str, ctx)
 	case reflect.String:
 		v.SetString(str)
 	case reflect.Struct:
-		err = parseStruct(v, str)
+		err = parseStruct(v, str, ctx)
 	default:
 		return fmt.Errorf("envconfig: kind %v not supported", kind)
 	}
@@ -246,7 +325,7 @@ func parseDuration(v reflect.Value, str string) error {
 }
 
 // NOTE(vincent): this is only called when parsing structs inside a slice.
-func parseStruct(value reflect.Value, token string) error {
+func parseStruct(value reflect.Value, token string, ctx *context) error {
 	tokens := strings.Split(token[1:len(token)-1], ",")
 	if len(tokens) != value.NumField() {
 		return fmt.Errorf("envconfig: struct token has %d fields but struct has %d", len(tokens), value.NumField())
@@ -256,7 +335,7 @@ func parseStruct(value reflect.Value, token string) error {
 		field := value.Field(i)
 		t := tokens[i]
 
-		if err := parseValue(field, t); err != nil {
+		if err := parseValue(field, t, ctx); err != nil {
 			return err
 		}
 	}

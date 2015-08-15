@@ -392,6 +392,9 @@ func TestUnexportedField(t *testing.T) {
 
 	err := envconfig.Init(&conf)
 	require.Equal(t, envconfig.ErrUnexportedField, err)
+
+	err = envconfig.InitWithOptions(&conf, envconfig.Options{AllowUnexported: true})
+	require.Equal(t, nil, err)
 }
 
 type sliceWithUnmarshaler []int
