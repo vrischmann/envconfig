@@ -30,7 +30,7 @@ Then it's just a matter of setting the environment variables when calling your b
 Layout of the conf struct
 
 Your conf struct must follow the following rules:
- - no unexported fields
+ - no unexported fields by default (can turn off with Options.AllowUnexported)
  - only supported types (no map fields for example)
 
 Naming of the keys
