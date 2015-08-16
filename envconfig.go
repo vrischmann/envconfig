@@ -15,11 +15,11 @@ import (
 )
 
 var (
-	// ErrUnexportedField is the error returned by Init and InitWithPrefix when a field of the config struct is not exported.
+	// ErrUnexportedField is the error returned by the Init* functions when a field of the config struct is not exported and the option AllowUnexported is not used.
 	ErrUnexportedField = errors.New("envconfig: unexported field")
-	// ErrNotAPointer is the error returned by Init and InitWithPrefix when the configuration object is not a pointer.
+	// ErrNotAPointer is the error returned by the Init* functions when the configuration object is not a pointer.
 	ErrNotAPointer = errors.New("envconfig: value is not a pointer")
-	// ErrInvalidValueKind is the error returned by Init and InitWithPrefix when the configuration object is not a struct.
+	// ErrInvalidValueKind is the error returned by the Init* functions when the configuration object is not a struct.
 	ErrInvalidValueKind = errors.New("envconfig: invalid value kind, only works on structs")
 )
 
@@ -58,7 +58,7 @@ type Options struct {
 	//			B string
 	//		}
 	//	}
-	//	envconfig.Init(&X, Options{LeaveNil: true})
+	//	envconfig.InitWithOptions(&X, Options{LeaveNil: true})
 	//
 	// $ ./program
 	//
