@@ -38,6 +38,7 @@ type Unmarshaler interface {
 	Unmarshal(s string) error
 }
 
+// Options is used to customize the behavior of envconfig. Use it with InitWithOptions.
 type Options struct {
 	// Prefix allows specifying a prefix for each key.
 	Prefix string
