@@ -266,13 +266,6 @@ func isUnmarshaler(t reflect.Type) bool {
 }
 
 func parseValue(v reflect.Value, str string, ctx *context) (err error) {
-	if !v.CanSet() {
-		if !ctx.allowUnexported {
-			return ErrUnexportedField
-		}
-		return nil
-	}
-
 	vtype := v.Type()
 
 	// Special case for Unmarshaler
