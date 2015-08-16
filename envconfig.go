@@ -75,7 +75,7 @@ type Options struct {
 
 // Init reads the configuration from environment variables and populates the conf object. conf must be a pointer
 func Init(conf interface{}) error {
-	return InitWithPrefix(conf, "")
+	return InitWithOptions(conf, Options{})
 }
 
 // InitWithPrefix reads the configuration from environment variables and populates the conf object. conf must be a pointer.
