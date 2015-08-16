@@ -511,3 +511,18 @@ func TestParseEmptyTag(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, "foobar", conf.Name)
 }
+
+func TestLeaveNil(t *testing.T) {
+	var conf struct {
+		MySQL *struct {
+			Name string
+		}
+	}
+
+	err := envconfig.InitWithOptions(&conf, envconfig.Options{
+		AllOptional: true,
+		LeaveNil:    true,
+	})
+	require.Nil(t, err)
+	require.Nil(t, conf.MySQL)
+}
