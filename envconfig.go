@@ -172,22 +172,24 @@ func readStruct(value reflect.Value, ctx *context) (nonnil bool, err error) {
 		case reflect.Struct:
 			var nonnilin bool
 			nonnilin, err = readStruct(field, &context{
-				name:       combineName(ctx.name, name),
-				optional:   ctx.optional || tag.optional,
-				defaultVal: tag.defaultVal,
-				parents:    parents,
-				leaveNil:   ctx.leaveNil,
+				name:            combineName(ctx.name, name),
+				optional:        ctx.optional || tag.optional,
+				defaultVal:      tag.defaultVal,
+				parents:         parents,
+				leaveNil:        ctx.leaveNil,
+				allowUnexported: ctx.allowUnexported,
 			})
 			nonnil = nonnil || nonnilin
 		default:
 			var ok bool
 			ok, err = setField(field, &context{
-				name:       combineName(ctx.name, name),
-				customName: tag.customName,
-				optional:   ctx.optional || tag.optional,
-				defaultVal: tag.defaultVal,
-				parents:    parents,
-				leaveNil:   ctx.leaveNil,
+				name:            combineName(ctx.name, name),
+				customName:      tag.customName,
+				optional:        ctx.optional || tag.optional,
+				defaultVal:      tag.defaultVal,
+				parents:         parents,
+				leaveNil:        ctx.leaveNil,
+				allowUnexported: ctx.allowUnexported,
 			})
 			nonnil = nonnil || ok
 		}
