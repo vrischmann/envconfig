@@ -397,6 +397,24 @@ func TestUnexportedField(t *testing.T) {
 	require.Equal(t, nil, err)
 }
 
+func TestNestedUnexportedField(t *testing.T) {
+	var conf struct {
+		Foo struct {
+			Bar struct {
+				baz string
+			}
+		}
+	}
+
+	os.Setenv("FOO_BAR_BAZ", "foobar")
+
+	err := envconfig.Init(&conf)
+	require.Equal(t, envconfig.ErrUnexportedField, err)
+
+	err = envconfig.InitWithOptions(&conf, envconfig.Options{AllowUnexported: true})
+	require.Equal(t, nil, err)
+}
+
 type sliceWithUnmarshaler []int
 
 func (sl *sliceWithUnmarshaler) Unmarshal(s string) error {
