@@ -453,7 +453,8 @@ func TestParseDefaultVal(t *testing.T) {
 				Address string `envconfig:"default=localhost"`
 				Port    int    `envconfig:"default=3306"`
 			}
-			Timeout time.Duration `envconfig:"default=1m,myTimeout"`
+			Timeout      time.Duration `envconfig:"default=1m,myTimeout"`
+			LocalTimeout time.Duration `envconfig:"myTimeout2,default=1m"`
 		}
 	}
 
@@ -464,12 +465,14 @@ func TestParseDefaultVal(t *testing.T) {
 	require.Equal(t, time.Minute*1, conf.MySQL.Timeout)
 
 	os.Setenv("myTimeout", "2m")
+	os.Setenv("myTimeout2", "20m")
 
 	err = envconfig.Init(&conf)
 	require.Nil(t, err)
 	require.Equal(t, "localhost", conf.MySQL.Master.Address)
 	require.Equal(t, 3306, conf.MySQL.Master.Port)
 	require.Equal(t, time.Minute*2, conf.MySQL.Timeout)
+	require.Equal(t, time.Minute*20, conf.MySQL.LocalTimeout)
 }
 
 func TestInitNotAPointer(t *testing.T) {
