@@ -270,6 +270,12 @@ func isUnmarshaler(t reflect.Type) bool {
 func parseValue(v reflect.Value, str string, ctx *context) (err error) {
 	vtype := v.Type()
 
+	// Special case when the type is a map: we need to make the map
+	switch vtype.Kind() {
+	case reflect.Map:
+		v.Set(reflect.MakeMap(vtype))
+	}
+
 	// Special case for Unmarshaler
 	if isUnmarshaler(vtype) {
 		return parseWithUnmarshaler(v, str)

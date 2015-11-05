@@ -547,3 +547,22 @@ func TestLeaveNil(t *testing.T) {
 	require.Nil(t, err)
 	require.Nil(t, conf.MySQL)
 }
+
+type myMapType map[string]int
+
+func (t *myMapType) Unmarshal(s string) error {
+	(*t)[s] = 1
+	return nil
+}
+
+func TestParseMapType(t *testing.T) {
+	var conf struct {
+		Map myMapType
+	}
+
+	os.Setenv("MAP", "a")
+
+	err := envconfig.Init(&conf)
+	require.Nil(t, err)
+	require.Equal(t, 1, conf.Map["a"])
+}
