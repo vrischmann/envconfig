@@ -149,7 +149,7 @@ You can of course combine multiple options. The syntax is simple enough, separat
 
 For example:
 
-    ar conf struct {
+    var conf struct {
         Timeout time.Duration `envconfig:"default=1m,myTimeout"`
     }
 
