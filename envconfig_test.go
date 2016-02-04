@@ -320,11 +320,21 @@ func TestParseOptionalConfig(t *testing.T) {
 	os.Setenv("DELTA", "")
 	os.Setenv("DELTAV", "")
 	os.Setenv("SLICE", "")
-	os.Setenv("STRUCT", "")
+	os.Setenv("STRUCT_A", "")
 
 	err := envconfig.Init(&conf)
 	require.Nil(t, err)
 	require.Equal(t, "", conf.Name)
+
+	os.Setenv("NAME", "foobar")
+	os.Setenv("STRUCT_A", "foobar")
+	os.Setenv("STRUCT_B", "1")
+
+	err = envconfig.Init(&conf)
+	require.Nil(t, err)
+	require.Equal(t, "foobar", conf.Name)
+	require.Equal(t, "foobar", conf.Struct.A)
+	require.Equal(t, 1, conf.Struct.B)
 }
 
 func TestParseSkippableConfig(t *testing.T) {
