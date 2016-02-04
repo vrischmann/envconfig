@@ -327,12 +327,14 @@ func TestParseOptionalConfig(t *testing.T) {
 	require.Equal(t, "", conf.Name)
 
 	os.Setenv("NAME", "foobar")
+	os.Setenv("SLICE", "a,b")
 	os.Setenv("STRUCT_A", "foobar")
 	os.Setenv("STRUCT_B", "1")
 
 	err = envconfig.Init(&conf)
 	require.Nil(t, err)
 	require.Equal(t, "foobar", conf.Name)
+	require.Equal(t, []string{"a", "b"}, conf.Slice)
 	require.Equal(t, "foobar", conf.Struct.A)
 	require.Equal(t, 1, conf.Struct.B)
 }
