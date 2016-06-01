@@ -40,7 +40,7 @@ func (t *sliceTokenizer) scan() bool {
 			t.inBraces = false
 		}
 
-		if ch == ',' && !t.inBraces {
+		if (ch == ',' || ch == '|') && !t.inBraces {
 			return true
 		}
 

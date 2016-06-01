@@ -328,7 +328,9 @@ func parseDuration(v reflect.Value, str string) error {
 
 // NOTE(vincent): this is only called when parsing structs inside a slice.
 func parseStruct(value reflect.Value, token string, ctx *context) error {
-	tokens := strings.Split(token[1:len(token)-1], ",")
+	tokens := strings.FieldsFunc(token[1:len(token)-1], func(c rune) bool {
+		return c == ',' || c == '|'
+	})
 	if len(tokens) != value.NumField() {
 		return fmt.Errorf("envconfig: struct token has %d fields but struct has %d", len(tokens), value.NumField())
 	}
