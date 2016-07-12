@@ -145,12 +145,12 @@ Here's to do this with envconfig:
 
 Combining options
 
-You can of course combine multiple options. The syntax is simple enough, separate each option with a comma.
+You can of course combine multiple options. The syntax is simple enough, separate each option with a space.
 
 For example:
 
     var conf struct {
-        Timeout time.Duration `envconfig:"default=1m,myTimeout"`
+        Timeout time.Duration `envconfig:"default=1m myTimeout"`
     }
 
 This would give you the default timeout of 1 minute, and lookup the myTimeout environment variable.
