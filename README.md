@@ -104,7 +104,7 @@ You can of course combine multiple options:
 
 ```go
 var conf struct {
-    Name string `envconfig:"default=Vincent,myName"`
+    Name string `envconfig:"myName,default=Vincent"`
 }
 ```
 
