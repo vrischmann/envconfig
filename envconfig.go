@@ -125,7 +125,7 @@ type tag struct {
 func parseTag(s string) *tag {
 	var t tag
 
-	tokens := strings.Split(s, ",")
+	tokens := strings.Split(s, " ")
 	for _, v := range tokens {
 		switch {
 		case v == "-":
@@ -328,9 +328,7 @@ func parseDuration(v reflect.Value, str string) error {
 
 // NOTE(vincent): this is only called when parsing structs inside a slice.
 func parseStruct(value reflect.Value, token string, ctx *context) error {
-	tokens := strings.FieldsFunc(token[1:len(token)-1], func(c rune) bool {
-		return c == ',' || c == '|'
-	})
+	tokens := strings.Split(token[1:len(token)-1], ",")
 	if len(tokens) != value.NumField() {
 		return fmt.Errorf("envconfig: struct token has %d fields but struct has %d", len(tokens), value.NumField())
 	}

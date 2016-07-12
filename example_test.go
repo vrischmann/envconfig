@@ -90,11 +90,11 @@ func ExampleInitWithPrefix() {
 
 func ExampleInit_WithDefaults() {
 	var conf struct {
-		Addrs    []string `envconfig:"default=10.0.0.1:8080|10.0.0.2:8080"`
+		Addrs    []string `envconfig:"default=10.0.0.1:8080,10.0.0.2:8080"`
 		Backends []struct {
 			Host string
 			Port int
-		} `envconfig:"default={10.0.0.1|6000}|{10.0.0.2|6000}"`
+		} `envconfig:"default={10.0.0.1,6000},{10.0.0.2,6000}"`
 	}
 
 	err := envconfig.Init(&conf)

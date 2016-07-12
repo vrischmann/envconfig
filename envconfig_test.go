@@ -465,9 +465,9 @@ func TestParseDefaultVal(t *testing.T) {
 				Address string `envconfig:"default=localhost"`
 				Port    int    `envconfig:"default=3306"`
 			}
-			DBs          []string      `envconfig:"default=foobar|barbaz"`
-			Timeout      time.Duration `envconfig:"default=1m,myTimeout"`
-			LocalTimeout time.Duration `envconfig:"myTimeout2,default=1m"`
+			DBs          []string      `envconfig:"default=foobar,barbaz"`
+			Timeout      time.Duration `envconfig:"default=1m myTimeout"`
+			LocalTimeout time.Duration `envconfig:"myTimeout2 default=1m"`
 		}
 	}
 
