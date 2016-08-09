@@ -142,7 +142,7 @@ func parseTag(s string) *tag {
 	return &t
 }
 
-func readStruct(value reflect.Value, ctx *context) (nonnil bool, err error) {
+func readStruct(value reflect.Value, ctx *context) (nonNil bool, err error) {
 	var parents []reflect.Value
 
 	for i := 0; i < value.NumField(); i++ {
@@ -170,8 +170,8 @@ func readStruct(value reflect.Value, ctx *context) (nonnil bool, err error) {
 			field = field.Elem()
 			goto doRead
 		case reflect.Struct:
-			var nonnilin bool
-			nonnilin, err = readStruct(field, &context{
+			var nonNilIn bool
+			nonNilIn, err = readStruct(field, &context{
 				name:            combineName(ctx.name, name),
 				optional:        ctx.optional || tag.optional,
 				defaultVal:      tag.defaultVal,
@@ -179,7 +179,7 @@ func readStruct(value reflect.Value, ctx *context) (nonnil bool, err error) {
 				leaveNil:        ctx.leaveNil,
 				allowUnexported: ctx.allowUnexported,
 			})
-			nonnil = nonnil || nonnilin
+			nonNil = nonNil || nonNilIn
 		default:
 			var ok bool
 			ok, err = setField(field, &context{
@@ -191,7 +191,7 @@ func readStruct(value reflect.Value, ctx *context) (nonnil bool, err error) {
 				leaveNil:        ctx.leaveNil,
 				allowUnexported: ctx.allowUnexported,
 			})
-			nonnil = nonnil || ok
+			nonNil = nonNil || ok
 		}
 
 		if err != nil {
@@ -199,13 +199,13 @@ func readStruct(value reflect.Value, ctx *context) (nonnil bool, err error) {
 		}
 	}
 
-	if !nonnil && ctx.leaveNil { // re-zero
+	if !nonNil && ctx.leaveNil { // re-zero
 		for _, p := range parents {
 			p.Set(reflect.Zero(p.Type()))
 		}
 	}
 
-	return nonnil, err
+	return nonNil, err
 }
 
 var byteSliceType = reflect.TypeOf([]byte(nil))
