@@ -211,21 +211,24 @@ func readStruct(value reflect.Value, ctx *context) (nonnil bool, err error) {
 var byteSliceType = reflect.TypeOf([]byte(nil))
 
 func setField(value reflect.Value, ctx *context) (ok bool, err error) {
-	str, err := readValue(ctx)
+	isSliceNotUnmarshaler := value.Kind() == reflect.Slice && !isUnmarshaler(value.Type())
+
+	str, err := readValue(ctx, isSliceNotUnmarshaler)
 	if err != nil {
 		return false, err
 	}
+
 	if len(str) == 0 && ctx.optional {
 		return false, nil
 	}
 
-	vkind := value.Kind()
 	switch {
-	case vkind == reflect.Slice && !isUnmarshaler(value.Type()):
-		if value.Type() == byteSliceType {
-			return true, parseBytesValue(value, str)
-		}
+	case isSliceNotUnmarshaler && value.Type() == byteSliceType:
+		return true, parseBytesValue(value, str)
+
+	case isSliceNotUnmarshaler:
 		return true, setSliceField(value, str, ctx)
+
 	default:
 		return true, parseValue(value, str, ctx)
 	}
@@ -403,15 +406,15 @@ func combineName(parentName, name string) string {
 	return parentName + "." + name
 }
 
-func readValue(ctx *context) (string, error) {
+func readValue(ctx *context, isSlice bool) (string, error) {
 	keys := makeAllPossibleKeys(ctx)
+
 	var str string
-	{
-		for _, key := range keys {
-			str = os.Getenv(key)
-			if str != "" {
-				break
-			}
+
+	for _, key := range keys {
+		str = os.Getenv(key)
+		if str != "" {
+			break
 		}
 	}
 
@@ -419,7 +422,8 @@ func readValue(ctx *context) (string, error) {
 		return str, nil
 	}
 
-	if ctx.defaultVal != "" {
+	// only return the default value for non slices since it doesn't work as people expect.
+	if !isSlice && ctx.defaultVal != "" {
 		return ctx.defaultVal, nil
 	}
 

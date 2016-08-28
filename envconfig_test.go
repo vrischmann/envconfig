@@ -487,6 +487,27 @@ func TestParseDefaultVal(t *testing.T) {
 	require.Equal(t, time.Minute*20, conf.MySQL.LocalTimeout)
 }
 
+func TestDefaultSlice(t *testing.T) {
+	// See https://github.com/vrischmann/envconfig/pull/15
+	//
+	// The way people think about the following default value, is that the slice will be [a,b]
+	// However this never worked because we split the entire envconfig tag on , therefore default is just `a` here.
+	// The proper thing to do is to introduce a new format in the tag that doesn't have this limitation, but we don't have that yet.
+	// For now, we ignore the default tag and simply treat the rest, here `b` is the name of the environment variable expected.
+	//
+	// At least now it won't silently fail by putting only half of the slice in the default.
+
+	var conf struct {
+		Hosts []string `envconfig:"default=a,b"`
+	}
+
+	os.Setenv("b", "c,d")
+
+	err := envconfig.Init(&conf)
+	require.Nil(t, err)
+	require.Equal(t, []string{"c", "d"}, conf.Hosts)
+}
+
 func TestInitNotAPointer(t *testing.T) {
 	err := envconfig.Init("foobar")
 	require.Equal(t, envconfig.ErrNotAPointer, err)
