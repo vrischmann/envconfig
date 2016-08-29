@@ -128,15 +128,19 @@ type tag struct {
 func parseTag(s string) *tag {
 	var t tag
 
-	tokens := strings.Split(s, ",")
+	parts := strings.SplitN(s, "default=", 2)
+	if len(parts) == 2 {
+		t.defaultVal = parts[1]
+	}
+
+	tokens := strings.Split(parts[0], ",")
 	for _, v := range tokens {
-		switch {
-		case v == "-":
+		switch v {
+		case "":
+		case "-":
 			t.skip = true
-		case v == "optional":
+		case "optional":
 			t.optional = true
-		case strings.HasPrefix(v, "default="):
-			t.defaultVal = strings.TrimPrefix(v, "default=")
 		default:
 			t.customName = v
 		}

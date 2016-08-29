@@ -78,7 +78,8 @@ Default values
 
 ```go
 var conf struct {
-    Name string `envconfig:"default=Vincent"`
+    Name string    `envconfig:"default=Vincent"`
+    Addrs []string `envconfig:"default=10.0.0.1:8080,10.0.0.2:8080"`
 }
 ```
 
@@ -103,7 +104,7 @@ You can of course combine multiple options:
 
 ```go
 var conf struct {
-    Name string `envconfig:"default=Vincent,myName"`
+    Name string `envconfig:"myName,default=Vincent"`
 }
 ```
 

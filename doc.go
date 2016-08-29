@@ -150,7 +150,7 @@ You can of course combine multiple options. The syntax is simple enough, separat
 For example:
 
     var conf struct {
-        Timeout time.Duration `envconfig:"default=1m,myTimeout"`
+        Timeout time.Duration `envconfig:"myTimeout,default=1m"`
     }
 
 This would give you the default timeout of 1 minute, and lookup the myTimeout environment variable.

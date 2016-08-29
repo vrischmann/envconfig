@@ -465,12 +465,21 @@ func TestParseDefaultVal(t *testing.T) {
 				Address string `envconfig:"default=localhost"`
 				Port    int    `envconfig:"default=3306"`
 			}
-			Timeout      time.Duration `envconfig:"default=1m,myTimeout"`
+			DBs          []string      `envconfig:"default=foobar,barbaz"`
+			Timeout      time.Duration `envconfig:"myTimeout,default=1m"`
 			LocalTimeout time.Duration `envconfig:"myTimeout2,default=1m"`
 		}
 	}
 
 	err := envconfig.Init(&conf)
+	require.Nil(t, err)
+	require.Equal(t, "localhost", conf.MySQL.Master.Address)
+	require.Equal(t, 3306, conf.MySQL.Master.Port)
+	require.Equal(t, time.Minute*1, conf.MySQL.Timeout)
+	require.Equal(t, 2, len(conf.MySQL.DBs))
+	require.Equal(t, "foobar", conf.MySQL.DBs[0])
+	require.Equal(t, "barbaz", conf.MySQL.DBs[1])
+
 	require.Nil(t, err)
 	require.Equal(t, "localhost", conf.MySQL.Master.Address)
 	require.Equal(t, 3306, conf.MySQL.Master.Port)
