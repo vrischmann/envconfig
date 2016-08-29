@@ -21,6 +21,9 @@ var (
 	ErrNotAPointer = errors.New("envconfig: value is not a pointer")
 	// ErrInvalidValueKind is the error returned by the Init* functions when the configuration object is not a struct.
 	ErrInvalidValueKind = errors.New("envconfig: invalid value kind, only works on structs")
+	// ErrDefaultUnsupportedOnSlice is the error returned by the Init* functions when there is a default tag on a slice.
+	// The `default` tag is unsupported on slices because slice parsing uses , as the separator, as does the envconfig tags separator.
+	ErrDefaultUnsupportedOnSlice = errors.New("envconfig: default tag unsupported on slice")
 )
 
 type context struct {
@@ -211,9 +214,7 @@ func readStruct(value reflect.Value, ctx *context) (nonnil bool, err error) {
 var byteSliceType = reflect.TypeOf([]byte(nil))
 
 func setField(value reflect.Value, ctx *context) (ok bool, err error) {
-	isSliceNotUnmarshaler := value.Kind() == reflect.Slice && !isUnmarshaler(value.Type())
-
-	str, err := readValue(ctx, isSliceNotUnmarshaler)
+	str, err := readValue(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -222,6 +223,7 @@ func setField(value reflect.Value, ctx *context) (ok bool, err error) {
 		return false, nil
 	}
 
+	isSliceNotUnmarshaler := value.Kind() == reflect.Slice && !isUnmarshaler(value.Type())
 	switch {
 	case isSliceNotUnmarshaler && value.Type() == byteSliceType:
 		return true, parseBytesValue(value, str)
@@ -235,6 +237,10 @@ func setField(value reflect.Value, ctx *context) (ok bool, err error) {
 }
 
 func setSliceField(value reflect.Value, str string, ctx *context) error {
+	if ctx.defaultVal != "" {
+		return ErrDefaultUnsupportedOnSlice
+	}
+
 	elType := value.Type().Elem()
 	tnz := newSliceTokenizer(str)
 
@@ -406,7 +412,7 @@ func combineName(parentName, name string) string {
 	return parentName + "." + name
 }
 
-func readValue(ctx *context, isSlice bool) (string, error) {
+func readValue(ctx *context) (string, error) {
 	keys := makeAllPossibleKeys(ctx)
 
 	var str string
@@ -422,8 +428,7 @@ func readValue(ctx *context, isSlice bool) (string, error) {
 		return str, nil
 	}
 
-	// only return the default value for non slices since it doesn't work as people expect.
-	if !isSlice && ctx.defaultVal != "" {
+	if ctx.defaultVal != "" {
 		return ctx.defaultVal, nil
 	}
 

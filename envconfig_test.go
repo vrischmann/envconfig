@@ -493,19 +493,15 @@ func TestDefaultSlice(t *testing.T) {
 	// The way people think about the following default value, is that the slice will be [a,b]
 	// However this never worked because we split the entire envconfig tag on , therefore default is just `a` here.
 	// The proper thing to do is to introduce a new format in the tag that doesn't have this limitation, but we don't have that yet.
-	// For now, we ignore the default tag and simply treat the rest, here `b` is the name of the environment variable expected.
-	//
-	// At least now it won't silently fail by putting only half of the slice in the default.
+	// For now, we simply return an error indicating default is not unsupported on slices.
 
 	var conf struct {
 		Hosts []string `envconfig:"default=a,b"`
 	}
 
-	os.Setenv("b", "c,d")
-
 	err := envconfig.Init(&conf)
-	require.Nil(t, err)
-	require.Equal(t, []string{"c", "d"}, conf.Hosts)
+	require.NotNil(t, err)
+	require.Equal(t, envconfig.ErrDefaultUnsupportedOnSlice, err)
 }
 
 func TestInitNotAPointer(t *testing.T) {
