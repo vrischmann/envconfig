@@ -33,6 +33,7 @@ type context struct {
 	parents            []reflect.Value
 	optional, leaveNil bool
 	allowUnexported    bool
+	getEnv             func(string) string
 }
 
 // Unmarshaler is the interface implemented by objects that can unmarshal
@@ -74,6 +75,9 @@ type Options struct {
 
 	// AllowUnexported allows unexported fields to be present in the passed config.
 	AllowUnexported bool
+
+	// Getenv allows to pass a custom lookup for environment data. Default: os.Getenv
+	Getenv func(string) string
 }
 
 // Init reads the configuration from environment variables and populates the conf object. conf must be a pointer
@@ -96,13 +100,17 @@ func InitWithOptions(conf interface{}, opts Options) error {
 	}
 
 	elem := value.Elem()
-
 	ctx := context{
 		name:            opts.Prefix,
 		optional:        opts.AllOptional,
 		leaveNil:        opts.LeaveNil,
 		allowUnexported: opts.AllowUnexported,
+		getEnv:          opts.Getenv,
 	}
+	if ctx.getEnv == nil {
+		ctx.getEnv = os.Getenv
+	}
+
 	switch elem.Kind() {
 	case reflect.Ptr:
 		if elem.IsNil() {
@@ -181,6 +189,7 @@ func readStruct(value reflect.Value, ctx *context) (nonNil bool, err error) {
 				parents:         parents,
 				leaveNil:        ctx.leaveNil,
 				allowUnexported: ctx.allowUnexported,
+				getEnv:          ctx.getEnv,
 			})
 			nonNil = nonNil || nonNilIn
 		default:
@@ -193,6 +202,7 @@ func readStruct(value reflect.Value, ctx *context) (nonNil bool, err error) {
 				parents:         parents,
 				leaveNil:        ctx.leaveNil,
 				allowUnexported: ctx.allowUnexported,
+				getEnv:          ctx.getEnv,
 			})
 			nonNil = nonNil || ok
 		}
@@ -418,7 +428,7 @@ func readValue(ctx *context) (string, error) {
 	var str string
 
 	for _, key := range keys {
-		str = os.Getenv(key)
+		str = ctx.getEnv(key)
 		if str != "" {
 			break
 		}

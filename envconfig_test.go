@@ -427,6 +427,24 @@ func TestNestedUnexportedField(t *testing.T) {
 	require.Equal(t, nil, err)
 }
 
+func TestAlternativeGetEnv(t *testing.T) {
+	var conf struct {
+		Name string
+	}
+	os.Setenv("NAME", "foo")
+	alt := map[string]string{"NAME": "bar"}
+
+	err := envconfig.Init(&conf)
+	require.Nil(t, err)
+	require.Equal(t, "foo", conf.Name)
+
+	err = envconfig.InitWithOptions(&conf, envconfig.Options{
+		Getenv: func(k string) string { return alt[k] }},
+	)
+	require.Nil(t, err)
+	require.Equal(t, "bar", conf.Name)
+}
+
 type sliceWithUnmarshaler []int
 
 func (sl *sliceWithUnmarshaler) Unmarshal(s string) error {
