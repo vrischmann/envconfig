@@ -226,7 +226,11 @@ func setField(value reflect.Value, ctx *context) (ok bool, err error) {
 	isSliceNotUnmarshaler := value.Kind() == reflect.Slice && !isUnmarshaler(value.Type())
 	switch {
 	case isSliceNotUnmarshaler && value.Type() == byteSliceType:
-		return true, parseBytesValue(value, str)
+		err := parseBytesValue(value, str)
+		if err != nil {
+			err = fmt.Errorf("envconfig: unable to parse value %q as bytes for possible keys %v. err=%v", str, makeAllPossibleKeys(ctx), err)
+		}
+		return true, err
 
 	case isSliceNotUnmarshaler:
 		return true, setSliceField(value, str, ctx)
@@ -285,35 +289,35 @@ func parseValue(v reflect.Value, str string, ctx *context) (err error) {
 		v.Set(reflect.MakeMap(vtype))
 	}
 
-	// Special case for Unmarshaler
-	if isUnmarshaler(vtype) {
-		return parseWithUnmarshaler(v, str)
-	}
-
-	// Special case for time.Duration
-	if isDurationField(vtype) {
-		return parseDuration(v, str)
-	}
-
 	kind := vtype.Kind()
-	switch kind {
-	case reflect.Bool:
+	switch {
+	case isUnmarshaler(vtype):
+		// Special case for Unmarshaler
+		err = parseWithUnmarshaler(v, str)
+	case isDurationField(vtype):
+		// Special case for time.Duration
+		err = parseDuration(v, str)
+	case kind == reflect.Bool:
 		err = parseBoolValue(v, str)
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+	case kind == reflect.Int, kind == reflect.Int8, kind == reflect.Int16, kind == reflect.Int32, kind == reflect.Int64:
 		err = parseIntValue(v, str)
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+	case kind == reflect.Uint, kind == reflect.Uint8, kind == reflect.Uint16, kind == reflect.Uint32, kind == reflect.Uint64:
 		err = parseUintValue(v, str)
-	case reflect.Float32, reflect.Float64:
+	case kind == reflect.Float32, kind == reflect.Float64:
 		err = parseFloatValue(v, str)
-	case reflect.Ptr:
+	case kind == reflect.Ptr:
 		v.Set(reflect.New(vtype.Elem()))
 		return parseValue(v.Elem(), str, ctx)
-	case reflect.String:
+	case kind == reflect.String:
 		v.SetString(str)
-	case reflect.Struct:
+	case kind == reflect.Struct:
 		err = parseStruct(v, str, ctx)
 	default:
 		return fmt.Errorf("envconfig: kind %v not supported", kind)
+	}
+
+	if err != nil {
+		return fmt.Errorf("envconfig: unable to parse value %q for possible keys %v. err=%v", str, makeAllPossibleKeys(ctx), err)
 	}
 
 	return
@@ -339,7 +343,7 @@ func parseDuration(v reflect.Value, str string) error {
 func parseStruct(value reflect.Value, token string, ctx *context) error {
 	tokens := strings.Split(token[1:len(token)-1], ",")
 	if len(tokens) != value.NumField() {
-		return fmt.Errorf("envconfig: struct token has %d fields but struct has %d", len(tokens), value.NumField())
+		return fmt.Errorf("struct token has %d fields but struct has %d", len(tokens), value.NumField())
 	}
 
 	for i := 0; i < value.NumField(); i++ {
