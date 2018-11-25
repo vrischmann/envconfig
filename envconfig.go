@@ -21,15 +21,13 @@ var (
 	ErrNotAPointer = errors.New("envconfig: value is not a pointer")
 	// ErrInvalidValueKind is the error returned by the Init* functions when the configuration object is not a struct.
 	ErrInvalidValueKind = errors.New("envconfig: invalid value kind, only works on structs")
-	// ErrDefaultUnsupportedOnSlice is the error returned by the Init* functions when there is a default tag on a slice.
-	// The `default` tag is unsupported on slices because slice parsing uses , as the separator, as does the envconfig tags separator.
-	ErrDefaultUnsupportedOnSlice = errors.New("envconfig: default tag unsupported on slice")
 )
 
 type context struct {
 	name               string
 	customName         string
 	defaultVal         string
+	usingDefault       bool
 	parents            []reflect.Value
 	optional, leaveNil bool
 	allowUnexported    bool
@@ -241,12 +239,13 @@ func setField(value reflect.Value, ctx *context) (ok bool, err error) {
 }
 
 func setSliceField(value reflect.Value, str string, ctx *context) error {
-	if ctx.defaultVal != "" {
-		return ErrDefaultUnsupportedOnSlice
+	separator := sliceEnvSeparator
+	if ctx.usingDefault {
+		separator = sliceDefaultSeparator
 	}
 
 	elType := value.Type().Elem()
-	tnz := newSliceTokenizer(str)
+	tnz := newSliceTokenizer(str, separator)
 
 	slice := reflect.MakeSlice(value.Type(), value.Len(), value.Cap())
 
@@ -341,7 +340,12 @@ func parseDuration(v reflect.Value, str string) error {
 
 // NOTE(vincent): this is only called when parsing structs inside a slice.
 func parseStruct(value reflect.Value, token string, ctx *context) error {
-	tokens := strings.Split(token[1:len(token)-1], ",")
+	separator := string(sliceEnvSeparator)
+	if ctx.usingDefault {
+		separator = string(sliceDefaultSeparator)
+	}
+
+	tokens := strings.Split(token[1:len(token)-1], separator)
 	if len(tokens) != value.NumField() {
 		return fmt.Errorf("struct token has %d fields but struct has %d", len(tokens), value.NumField())
 	}
@@ -433,6 +437,7 @@ func readValue(ctx *context) (string, error) {
 	}
 
 	if ctx.defaultVal != "" {
+		ctx.usingDefault = true
 		return ctx.defaultVal, nil
 	}
 

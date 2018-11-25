@@ -144,6 +144,25 @@ This will check for the key __SHARDS__. Example variable content: `{foobar,9000}
 
 This will result in two struct defined in the *Shards* slice.
 
+If you want to set default value for slice or array, you have to use `;` as separator, instead of `,`:
+
+```go
+var conf struct {
+    Ports []int `envconfig:"default=9000;100"`
+}
+```
+
+Same for slices of structs:
+
+```go
+var conf struct {
+    Shards []struct {
+        Name string
+        Port int
+    } `envconfig:"default={foobar;localhost:2929};{barbaz;localhost:2828}"`
+}
+```
+
 Future work
 -----------
 

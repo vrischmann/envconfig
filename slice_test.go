@@ -8,7 +8,7 @@ import (
 
 func TestSliceTokenizer(t *testing.T) {
 	str := "foobar,barbaz"
-	tnz := newSliceTokenizer(str)
+	tnz := newSliceTokenizer(str, sliceEnvSeparator)
 
 	b := tnz.scan()
 	require.Nil(t, tnz.Err())
@@ -28,7 +28,7 @@ func TestSliceTokenizer(t *testing.T) {
 
 func TestSliceOfStructsTokenizer(t *testing.T) {
 	str := "{foobar,100},{barbaz,200}"
-	tnz := newSliceTokenizer(str)
+	tnz := newSliceTokenizer(str, sliceEnvSeparator)
 
 	b := tnz.scan()
 	require.Nil(t, tnz.Err())
