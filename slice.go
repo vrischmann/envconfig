@@ -7,18 +7,25 @@ import (
 	"strings"
 )
 
+const (
+	sliceEnvSeparator     rune = ','
+	sliceDefaultSeparator rune = ';'
+)
+
 type sliceTokenizer struct {
-	err      error
-	r        *bufio.Reader
-	buf      bytes.Buffer
-	inBraces bool
+	err       error
+	r         *bufio.Reader
+	separator rune
+	buf       bytes.Buffer
+	inBraces  bool
 }
 
 var eof = rune(0)
 
-func newSliceTokenizer(str string) *sliceTokenizer {
+func newSliceTokenizer(str string, separator rune) *sliceTokenizer {
 	return &sliceTokenizer{
-		r: bufio.NewReader(strings.NewReader(str)),
+		r:         bufio.NewReader(strings.NewReader(str)),
+		separator: separator,
 	}
 }
 
@@ -40,7 +47,7 @@ func (t *sliceTokenizer) scan() bool {
 			t.inBraces = false
 		}
 
-		if ch == ',' && !t.inBraces {
+		if ch == t.separator && !t.inBraces {
 			return true
 		}
 

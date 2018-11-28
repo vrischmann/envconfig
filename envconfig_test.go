@@ -488,20 +488,35 @@ func TestParseDefaultVal(t *testing.T) {
 }
 
 func TestDefaultSlice(t *testing.T) {
-	// See https://github.com/vrischmann/envconfig/pull/15
-	//
-	// The way people think about the following default value, is that the slice will be [a,b]
-	// However this never worked because we split the entire envconfig tag on , therefore default is just `a` here.
-	// The proper thing to do is to introduce a new format in the tag that doesn't have this limitation, but we don't have that yet.
-	// For now, we simply return an error indicating default is not unsupported on slices.
-
 	var conf struct {
-		Hosts []string `envconfig:"default=a,b"`
+		Names  []string `envconfig:"default=foobar;barbaz"`
+		Ports  []int    `envconfig:"default=900;100"`
+		Shards []struct {
+			Name string
+			Addr string
+		} `envconfig:"default={foobar;localhost:2929};{barbaz;localhost:2828}"`
 	}
 
+	os.Setenv("NAMES", "")
+	os.Setenv("PORTS", "")
+	os.Setenv("SHARDS", "")
+
 	err := envconfig.Init(&conf)
-	require.NotNil(t, err)
-	require.Equal(t, envconfig.ErrDefaultUnsupportedOnSlice, err)
+	require.Nil(t, err)
+
+	require.Equal(t, 2, len(conf.Names))
+	require.Equal(t, "foobar", conf.Names[0])
+	require.Equal(t, "barbaz", conf.Names[1])
+
+	require.Equal(t, 2, len(conf.Ports))
+	require.Equal(t, 900, conf.Ports[0])
+	require.Equal(t, 100, conf.Ports[1])
+
+	require.Equal(t, 2, len(conf.Shards))
+	require.Equal(t, "foobar", conf.Shards[0].Name)
+	require.Equal(t, "localhost:2929", conf.Shards[0].Addr)
+	require.Equal(t, "barbaz", conf.Shards[1].Name)
+	require.Equal(t, "localhost:2828", conf.Shards[1].Addr)
 }
 
 func TestInitNotAPointer(t *testing.T) {
