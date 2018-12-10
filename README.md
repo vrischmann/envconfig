@@ -90,11 +90,18 @@ Optional values
 ```go
 var conf struct {
     Name string `envconfig:"optional"`
-    Age int     `envconfig:"-"`
 }
 ```
 
-The two syntax are equivalent.
+Skipping fields
+---------------
+
+*envconfig* supports skipping struct fields:
+```go
+var conf struct {
+    Internal string `envconfig:"-"`
+}
+```
 
 Combining multiple options in one tag
 -------------------------------------
