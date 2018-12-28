@@ -126,10 +126,15 @@ Sometimes you don't absolutely need a value. Here's how we tell envconfig a valu
 
     var conf struct {
         Name string `envconfig:"optional"`
-        Age int     `envconfig:"-"`
     }
 
-The two syntax are equivalent.
+Skipped fields
+
+Sometimes you want a field to be skipped entirely.
+
+    var conf struct {
+	Internal string `envconfig:"-"`
+    }
 
 Default values
 
