@@ -170,8 +170,15 @@ var conf struct {
 }
 ```
 
-Future work
------------
+Development state
+-----------------
 
-  * support for time.Time values with a layout defined via a field tag
-  * support for complex types
+I consider _envconfig_ to be pretty much done.
+
+It has been used extensively at [Batch](https://batch.com) for more than 5 years now without much problems,
+with no need for new features either.
+
+So, while I will keep maintaining this library (fixing bugs, making it compatible with new versions of Go and so on) for
+the foreseeable future, I don't plan on adding new features.
+
+But I'm open to discussion so if you have a need for a particular feature we can discuss it.
