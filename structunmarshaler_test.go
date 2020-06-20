@@ -29,6 +29,15 @@ func TestParseStructWithUnmarshaler(t *testing.T) {
 
 	os.Setenv("TEST_ENV_DATE", "2020-06-20")
 
+	t.Run("val", func(t *testing.T) {
+		conf := struct {
+			TestEnvDate dateUnmarshaller
+		}{}
+		if assert.NoError(t, envconfig.Init(&conf)) {
+			assert.Equal(t, time.Date(2020, time.June, 20, 0, 0, 0, 0, time.UTC), time.Time(conf.TestEnvDate))
+		}
+	})
+
 	t.Run("nil", func(t *testing.T) {
 		test(&struct{ TestEnvDate *dateUnmarshaller }{})
 	})
