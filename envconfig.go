@@ -148,9 +148,11 @@ func readStruct(value reflect.Value, ctx *context) (nonNil bool, err error) {
 
 	for i := 0; i < value.NumField(); i++ {
 		field := value.Field(i)
-		name := value.Type().Field(i).Name
+		fieldType := field.Type()
+		fieldInfo := value.Type().Field(i)
+		name := fieldInfo.Name
 
-		tag := parseTag(value.Type().Field(i).Tag.Get("envconfig"))
+		tag := parseTag(fieldInfo.Tag.Get("envconfig"))
 		if tag.skip || !field.CanSet() {
 			if !field.CanSet() && !ctx.allowUnexported {
 				return false, ErrUnexportedField
@@ -161,8 +163,8 @@ func readStruct(value reflect.Value, ctx *context) (nonNil bool, err error) {
 		parents = ctx.parents
 
 	doRead:
-		switch field.Kind() {
-		case reflect.Ptr:
+		switch {
+		case field.Kind() == reflect.Ptr && !isUnmarshaler(fieldType):
 			// it's a pointer, create a new value and restart the switch
 			if field.IsNil() {
 				field.Set(reflect.New(field.Type().Elem()))
@@ -170,7 +172,7 @@ func readStruct(value reflect.Value, ctx *context) (nonNil bool, err error) {
 			}
 			field = field.Elem()
 			goto doRead
-		case reflect.Struct:
+		case field.Kind() == reflect.Struct && !isUnmarshaler(fieldType):
 			var nonNilIn bool
 			nonNilIn, err = readStruct(field, &context{
 				name:            combineName(ctx.name, name),
@@ -267,8 +269,8 @@ func setSliceField(value reflect.Value, str string, ctx *context) error {
 }
 
 var (
-	durationType    = reflect.TypeOf(new(time.Duration)).Elem()
-	unmarshalerType = reflect.TypeOf(new(Unmarshaler)).Elem()
+	durationType    = reflect.TypeOf((*time.Duration)(nil)).Elem()
+	unmarshalerType = reflect.TypeOf((*Unmarshaler)(nil)).Elem()
 )
 
 func isDurationField(t reflect.Type) bool {
@@ -323,7 +325,15 @@ func parseValue(v reflect.Value, str string, ctx *context) (err error) {
 }
 
 func parseWithUnmarshaler(v reflect.Value, str string) error {
-	var u = v.Addr().Interface().(Unmarshaler)
+	var u Unmarshaler
+	if v.Kind() == reflect.Ptr {
+		if v.IsNil() {
+			v.Set(reflect.New(v.Type().Elem()))
+		}
+		u = v.Interface().(Unmarshaler)
+	} else {
+		u = v.Addr().Interface().(Unmarshaler)
+	}
 	return u.Unmarshal(str)
 }
 
