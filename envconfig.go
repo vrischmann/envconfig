@@ -249,7 +249,7 @@ func setSliceField(value reflect.Value, str string, ctx *context) error {
 	elType := value.Type().Elem()
 	tnz := newSliceTokenizer(str, separator)
 
-	slice := reflect.MakeSlice(value.Type(), value.Len(), value.Cap())
+	slice := reflect.MakeSlice(value.Type(), 0, value.Cap())
 
 	for tnz.scan() {
 		token := tnz.text()
