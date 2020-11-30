@@ -610,3 +610,21 @@ func TestParseMapType(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, 1, conf.Map["a"])
 }
+
+func TestSliceOverwrite(t *testing.T) {
+	var conf struct {
+		Single []string
+		More   []int
+	}
+
+	conf.Single = append(conf.Single, "foo", "bar")
+	conf.More = append(conf.More, 1, 2)
+
+	os.Setenv("SINGLE", "baz")
+	os.Setenv("MORE", "3,4")
+
+	err := envconfig.Init(&conf)
+	require.Nil(t, err)
+	require.Equal(t, []string{"baz"}, conf.Single)
+	require.Equal(t, []int{3, 4}, conf.More)
+}
