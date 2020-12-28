@@ -1,7 +1,7 @@
 envconfig
 =========
 
-[![Build Status](https://travis-ci.org/vrischmann/envconfig.svg?branch=master)](https://travis-ci.org/vrischmann/envconfig)
+![CI](https://github.com/vrischmann/envconfig/workflows/CI/badge.svg)
 [![Go Reference](https://pkg.go.dev/badge/github.com/vrischmann/envconfig.svg)](https://pkg.go.dev/github.com/vrischmann/envconfig)
 
 envconfig is a library which allows you to parse your configuration from environment variables and fill an arbitrary struct.
