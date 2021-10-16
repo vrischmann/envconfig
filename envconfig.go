@@ -25,6 +25,7 @@ var (
 
 type context struct {
 	name               string
+	prefix             string
 	prefixTag          bool
 	customName         string
 	defaultVal         string
@@ -101,6 +102,7 @@ func InitWithOptions(conf interface{}, opts Options) error {
 
 	ctx := context{
 		name:            opts.Prefix,
+		prefix:          opts.Prefix,
 		prefixTag:       opts.PrefixTag,
 		optional:        opts.AllOptional,
 		leaveNil:        opts.LeaveNil,
@@ -181,6 +183,8 @@ func readStruct(value reflect.Value, ctx *context) (nonNil bool, err error) {
 			var nonNilIn bool
 			nonNilIn, err = readStruct(field, &context{
 				name:            combineName(ctx.name, name),
+				prefix:          ctx.prefix,
+				prefixTag:       ctx.prefixTag,
 				optional:        ctx.optional || tag.optional,
 				defaultVal:      tag.defaultVal,
 				parents:         parents,
@@ -192,6 +196,8 @@ func readStruct(value reflect.Value, ctx *context) (nonNil bool, err error) {
 			var ok bool
 			ok, err = setField(field, &context{
 				name:            combineName(ctx.name, name),
+				prefix:          ctx.prefix,
+				prefixTag:       ctx.prefixTag,
 				customName:      tag.customName,
 				optional:        ctx.optional || tag.optional,
 				defaultVal:      tag.defaultVal,
@@ -466,7 +472,7 @@ func readValue(ctx *context) (string, error) {
 func makeAllPossibleKeys(ctx *context) (res []string) {
 	if ctx.customName != "" {
 		if ctx.prefixTag {
-			return []string{ctx.name + "_" + ctx.customName}
+			return []string{ctx.prefix + "_" + ctx.customName}
 		}
 		return []string{ctx.customName}
 	}
