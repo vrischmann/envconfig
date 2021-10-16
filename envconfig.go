@@ -25,6 +25,7 @@ var (
 
 type context struct {
 	name               string
+	prefixTag          bool
 	customName         string
 	defaultVal         string
 	usingDefault       bool
@@ -43,6 +44,9 @@ type Unmarshaler interface {
 type Options struct {
 	// Prefix allows specifying a prefix for each key.
 	Prefix string
+
+	// PrefixTag enables prefixes for the custom names set via struct tags
+	PrefixTag bool
 
 	// AllOptional determines whether to not throw errors by default for any key
 	// that is not found. AllOptional=true means errors will not be thrown.
@@ -97,6 +101,7 @@ func InitWithOptions(conf interface{}, opts Options) error {
 
 	ctx := context{
 		name:            opts.Prefix,
+		prefixTag:       opts.PrefixTag,
 		optional:        opts.AllOptional,
 		leaveNil:        opts.LeaveNil,
 		allowUnexported: opts.AllowUnexported,
@@ -460,6 +465,9 @@ func readValue(ctx *context) (string, error) {
 
 func makeAllPossibleKeys(ctx *context) (res []string) {
 	if ctx.customName != "" {
+		if ctx.prefixTag {
+			return []string{ctx.name + "_" + ctx.customName}
+		}
 		return []string{ctx.customName}
 	}
 

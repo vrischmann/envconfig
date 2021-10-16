@@ -8,7 +8,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
 	"github.com/vrischmann/envconfig"
 )
 
@@ -627,4 +629,44 @@ func TestSliceOverwrite(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, []string{"baz"}, conf.Single)
 	require.Equal(t, []int{3, 4}, conf.More)
+}
+
+func TestInitWithPrefix(t *testing.T) {
+	const (
+		fooValue = "foo"
+		barValue = "bar"
+	)
+
+	t.Run("DefaulBehaviour", func(t *testing.T) {
+		require.NoError(t, os.Setenv("TEST_ENV_FOO", fooValue))
+		require.NoError(t, os.Setenv("TESTPREFIX_DEFAULT_TEST_ENV_BAR", barValue))
+
+		var conf struct {
+			DefaultTestEnvFoo string `envconfig:"TEST_ENV_FOO"`
+			DefaultTestEnvBar string
+		}
+		err := envconfig.InitWithPrefix(&conf, "TESTPREFIX")
+
+		require.NoError(t, err)
+		assert.Equal(t, fooValue, conf.DefaultTestEnvFoo)
+		assert.Equal(t, barValue, conf.DefaultTestEnvBar)
+	})
+
+	t.Run("AdvancedBehaviour", func(t *testing.T) {
+		require.NoError(t, os.Setenv("TESTPREFIX_TEST_ENV_FOO", fooValue))
+		require.NoError(t, os.Setenv("TESTPREFIX_TEST_ENV_BAR", barValue))
+
+		var conf struct {
+			TestEnvFoo string `envconfig:"TEST_ENV_FOO"`
+			TestEnvBar string
+		}
+		err := envconfig.InitWithOptions(&conf, envconfig.Options{
+			Prefix:    "TESTPREFIX",
+			PrefixTag: true,
+		})
+
+		require.NoError(t, err)
+		assert.Equal(t, fooValue, conf.TestEnvFoo)
+		assert.Equal(t, barValue, conf.TestEnvBar)
+	})
 }
