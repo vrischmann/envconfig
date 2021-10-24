@@ -8,7 +8,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
 	"github.com/vrischmann/envconfig"
 )
 
@@ -627,4 +629,75 @@ func TestSliceOverwrite(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, []string{"baz"}, conf.Single)
 	require.Equal(t, []int{3, 4}, conf.More)
+}
+
+func TestInitWithPrefix(t *testing.T) {
+	t.Run("DefaulBehaviour", func(t *testing.T) {
+		type Node1 struct {
+			TestEnvNodeFoo1 string `envconfig:"TEST_ENV_NODE_FOO1"`
+			TestEnvNodeBar1 string
+		}
+
+		type Root1 struct {
+			TestEnvFoo1 string `envconfig:"TEST_ENV_FOO1"`
+			TestEnvBar1 string
+			Node1       Node1
+		}
+
+		expect := Root1{
+			TestEnvFoo1: "A1",
+			TestEnvBar1: "B1",
+			Node1: Node1{
+				TestEnvNodeFoo1: "C1",
+				TestEnvNodeBar1: "D1",
+			},
+		}
+
+		require.NoError(t, os.Setenv("TEST_ENV_FOO1", expect.TestEnvFoo1))
+		require.NoError(t, os.Setenv("TESTPREFIX1_TEST_ENV_BAR1", expect.TestEnvBar1))
+		require.NoError(t, os.Setenv("TEST_ENV_NODE_FOO1", expect.Node1.TestEnvNodeFoo1))
+		require.NoError(t, os.Setenv("TESTPREFIX1_NODE1_TEST_ENV_NODE_BAR1", expect.Node1.TestEnvNodeBar1))
+
+		var conf Root1
+		err := envconfig.InitWithPrefix(&conf, "TESTPREFIX1")
+
+		require.NoError(t, err)
+		assert.Equal(t, expect, conf)
+	})
+
+	t.Run("AdvancedBehaviour", func(t *testing.T) {
+		type Node2 struct {
+			TestEnvNodeFoo2 string `envconfig:"TEST_ENV_NODE_FOO2"`
+			TestEnvNodeBar2 string
+		}
+
+		type Root2 struct {
+			TestEnvFoo2 string `envconfig:"TEST_ENV_FOO2"`
+			TestEnvBar2 string
+			Node2       Node2
+		}
+
+		expect := Root2{
+			TestEnvFoo2: "A2",
+			TestEnvBar2: "B2",
+			Node2: Node2{
+				TestEnvNodeFoo2: "C2",
+				TestEnvNodeBar2: "D2",
+			},
+		}
+
+		require.NoError(t, os.Setenv("TESTPREFIX2_TEST_ENV_FOO2", expect.TestEnvFoo2))
+		require.NoError(t, os.Setenv("TESTPREFIX2_TEST_ENV_BAR2", expect.TestEnvBar2))
+		require.NoError(t, os.Setenv("TESTPREFIX2_TEST_ENV_NODE_FOO2", expect.Node2.TestEnvNodeFoo2))
+		require.NoError(t, os.Setenv("TESTPREFIX2_NODE2_TEST_ENV_NODE_BAR2", expect.Node2.TestEnvNodeBar2))
+
+		var conf Root2
+		err := envconfig.InitWithOptions(&conf, envconfig.Options{
+			Prefix:            "TESTPREFIX2",
+			PrefixCustomNames: true,
+		})
+
+		require.NoError(t, err)
+		assert.Equal(t, expect, conf)
+	})
 }
