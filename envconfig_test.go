@@ -652,7 +652,7 @@ func TestInitWithPrefix(t *testing.T) {
 				TestEnvNodeBar1: "D1",
 			},
 		}
-		
+
 		require.NoError(t, os.Setenv("TEST_ENV_FOO1", expect.TestEnvFoo1))
 		require.NoError(t, os.Setenv("TESTPREFIX1_TEST_ENV_BAR1", expect.TestEnvBar1))
 		require.NoError(t, os.Setenv("TEST_ENV_NODE_FOO1", expect.Node1.TestEnvNodeFoo1))
@@ -693,8 +693,8 @@ func TestInitWithPrefix(t *testing.T) {
 
 		var conf Root2
 		err := envconfig.InitWithOptions(&conf, envconfig.Options{
-			Prefix:    "TESTPREFIX2",
-			PrefixTag: true,
+			Prefix:            "TESTPREFIX2",
+			PrefixCustomNames: true,
 		})
 
 		require.NoError(t, err)

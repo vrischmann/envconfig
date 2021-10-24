@@ -26,7 +26,7 @@ var (
 type context struct {
 	name               string
 	prefix             string
-	prefixTag          bool
+	prefixCustomNames  bool
 	customName         string
 	defaultVal         string
 	usingDefault       bool
@@ -46,8 +46,8 @@ type Options struct {
 	// Prefix allows specifying a prefix for each key.
 	Prefix string
 
-	// PrefixTag enables prefixes for the custom names set via struct tags
-	PrefixTag bool
+	// PrefixCustomNames enables prefixes for the custom names set via struct tags
+	PrefixCustomNames bool
 
 	// AllOptional determines whether to not throw errors by default for any key
 	// that is not found. AllOptional=true means errors will not be thrown.
@@ -101,12 +101,12 @@ func InitWithOptions(conf interface{}, opts Options) error {
 	elem := value.Elem()
 
 	ctx := context{
-		name:            opts.Prefix,
-		prefix:          opts.Prefix,
-		prefixTag:       opts.PrefixTag,
-		optional:        opts.AllOptional,
-		leaveNil:        opts.LeaveNil,
-		allowUnexported: opts.AllowUnexported,
+		name:              opts.Prefix,
+		prefix:            opts.Prefix,
+		prefixCustomNames: opts.PrefixCustomNames,
+		optional:          opts.AllOptional,
+		leaveNil:          opts.LeaveNil,
+		allowUnexported:   opts.AllowUnexported,
 	}
 	switch elem.Kind() {
 	case reflect.Ptr:
@@ -182,28 +182,28 @@ func readStruct(value reflect.Value, ctx *context) (nonNil bool, err error) {
 		case field.Kind() == reflect.Struct && !isUnmarshaler(fieldType):
 			var nonNilIn bool
 			nonNilIn, err = readStruct(field, &context{
-				name:            combineName(ctx.name, name),
-				prefix:          ctx.prefix,
-				prefixTag:       ctx.prefixTag,
-				optional:        ctx.optional || tag.optional,
-				defaultVal:      tag.defaultVal,
-				parents:         parents,
-				leaveNil:        ctx.leaveNil,
-				allowUnexported: ctx.allowUnexported,
+				name:              combineName(ctx.name, name),
+				prefix:            ctx.prefix,
+				prefixCustomNames: ctx.prefixCustomNames,
+				optional:          ctx.optional || tag.optional,
+				defaultVal:        tag.defaultVal,
+				parents:           parents,
+				leaveNil:          ctx.leaveNil,
+				allowUnexported:   ctx.allowUnexported,
 			})
 			nonNil = nonNil || nonNilIn
 		default:
 			var ok bool
 			ok, err = setField(field, &context{
-				name:            combineName(ctx.name, name),
-				prefix:          ctx.prefix,
-				prefixTag:       ctx.prefixTag,
-				customName:      tag.customName,
-				optional:        ctx.optional || tag.optional,
-				defaultVal:      tag.defaultVal,
-				parents:         parents,
-				leaveNil:        ctx.leaveNil,
-				allowUnexported: ctx.allowUnexported,
+				name:              combineName(ctx.name, name),
+				prefix:            ctx.prefix,
+				prefixCustomNames: ctx.prefixCustomNames,
+				customName:        tag.customName,
+				optional:          ctx.optional || tag.optional,
+				defaultVal:        tag.defaultVal,
+				parents:           parents,
+				leaveNil:          ctx.leaveNil,
+				allowUnexported:   ctx.allowUnexported,
 			})
 			nonNil = nonNil || ok
 		}
@@ -471,7 +471,7 @@ func readValue(ctx *context) (string, error) {
 
 func makeAllPossibleKeys(ctx *context) (res []string) {
 	if ctx.customName != "" {
-		if ctx.prefixTag {
+		if ctx.prefixCustomNames {
 			return []string{ctx.prefix + "_" + ctx.customName}
 		}
 		return []string{ctx.customName}
