@@ -4,16 +4,16 @@ on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ '1.12', '1.13', '1.14', '1.15' ]
+        go: [ '1.23' ]
     name: Test with go ${{ matrix.go }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Setup go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v5
       with:
         go-version: ${{ matrix.go }}
     - run: go test -mod=readonly -v ./...
