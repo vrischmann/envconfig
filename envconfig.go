@@ -155,7 +155,7 @@ func readStruct(value reflect.Value, ctx *context) (nonNil bool, err error) {
 		tag := parseTag(fieldInfo.Tag.Get("envconfig"))
 		if tag.skip || !field.CanSet() {
 			if !field.CanSet() && !ctx.allowUnexported {
-				return false, ErrUnexportedField
+				return false, fmt.Errorf("%w %q", ErrUnexportedField, name)
 			}
 			continue
 		}

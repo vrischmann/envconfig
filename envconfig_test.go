@@ -29,7 +29,7 @@ func TestParseSimpleConfig(t *testing.T) {
 
 	os.Setenv("LOG_PATH", "/var/log/foobar")
 	err = envconfig.Init(&conf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	require.Equal(t, "foobar", conf.Name)
 	require.Equal(t, "/var/log/foobar", conf.Log.Path)
@@ -53,7 +53,7 @@ func TestParseIntegerConfig(t *testing.T) {
 	os.Setenv("VERSION", "2")
 
 	err := envconfig.Init(&conf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	require.Equal(t, 80, conf.Port)
 	require.Equal(t, uint64(timestamp), conf.Long)
@@ -68,7 +68,7 @@ func TestParseBoolConfig(t *testing.T) {
 	os.Setenv("DOIT", "true")
 
 	err := envconfig.Init(&conf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, true, conf.DoIt)
 }
 
@@ -80,7 +80,7 @@ func TestParseBytesConfig(t *testing.T) {
 	os.Setenv("DATA", "Rk9PQkFS")
 
 	err := envconfig.Init(&conf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, []byte("FOOBAR"), conf.Data)
 }
 
@@ -94,7 +94,7 @@ func TestParseFloatConfig(t *testing.T) {
 	os.Setenv("DELTAV", "400.20000000001")
 
 	err := envconfig.Init(&conf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, float32(0.02), conf.Delta)
 	require.Equal(t, float64(400.20000000001), conf.DeltaV)
 }
@@ -114,7 +114,7 @@ func TestParseSliceConfig(t *testing.T) {
 	os.Setenv("SHARDS", "{foobar,localhost:2929},{barbaz,localhost:2828}")
 
 	err := envconfig.Init(&conf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	require.Equal(t, 2, len(conf.Names))
 	require.Equal(t, "foobar", conf.Names[0])
@@ -192,7 +192,7 @@ func TestDurationConfig(t *testing.T) {
 	os.Setenv("TIMEOUT", "1m")
 
 	err := envconfig.Init(&conf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	require.Equal(t, time.Minute*1, conf.Timeout)
 }
@@ -205,7 +205,7 @@ func TestInvalidDurationConfig(t *testing.T) {
 	os.Setenv("TIMEOUT", "foo")
 
 	err := envconfig.Init(&conf)
-	require.NotNil(t, err)
+	require.Error(t, err)
 }
 
 func TestAllPointerConfig(t *testing.T) {
@@ -237,7 +237,7 @@ func TestAllPointerConfig(t *testing.T) {
 	os.Setenv("TIMEOUT", "1m")
 
 	err := envconfig.Init(&conf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	require.Equal(t, "foobar", *conf.Name)
 	require.Equal(t, 9000, *conf.Port)
@@ -284,7 +284,7 @@ func TestUnmarshaler(t *testing.T) {
 	os.Setenv("LOGMODE", "file")
 
 	err := envconfig.Init(&conf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, logFile, conf.LogMode)
 
 	var conf2 struct {
@@ -292,7 +292,7 @@ func TestUnmarshaler(t *testing.T) {
 	}
 
 	err = envconfig.Init(&conf2)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, logFile, *conf2.LogMode)
 }
 
@@ -323,7 +323,7 @@ func TestParseOptionalConfig(t *testing.T) {
 	os.Setenv("STRUCT_A", "")
 
 	err := envconfig.Init(&conf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, "", conf.Name)
 
 	os.Setenv("NAME", "foobar")
@@ -332,7 +332,7 @@ func TestParseOptionalConfig(t *testing.T) {
 	os.Setenv("STRUCT_B", "1")
 
 	err = envconfig.Init(&conf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, "foobar", conf.Name)
 	require.Equal(t, []string{"a", "b"}, conf.Slice)
 	require.Equal(t, "foobar", conf.Struct.A)
@@ -347,7 +347,7 @@ func TestParseSkippableConfig(t *testing.T) {
 	os.Setenv("FLAG", "true")
 
 	err := envconfig.Init(&conf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, false, conf.Flag)
 }
 
@@ -359,7 +359,7 @@ func TestParseCustomNameConfig(t *testing.T) {
 	os.Setenv("customName", "foobar")
 
 	err := envconfig.Init(&conf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, "foobar", conf.Name)
 }
 
@@ -373,7 +373,7 @@ func TestParseOptionalStruct(t *testing.T) {
 	os.Setenv("MASTER_NAME", "")
 
 	err := envconfig.Init(&conf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, "", conf.Master.Name)
 }
 
@@ -387,11 +387,11 @@ func TestParsePrefixedStruct(t *testing.T) {
 
 	os.Setenv("NAME", "bad")
 	err := envconfig.InitWithPrefix(&conf, "FOO")
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	os.Setenv("FOO_NAME", "good")
 	err = envconfig.InitWithPrefix(&conf, "FOO")
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, "good", conf.Name)
 }
 
@@ -403,10 +403,10 @@ func TestUnexportedField(t *testing.T) {
 	os.Setenv("NAME", "foobar")
 
 	err := envconfig.Init(&conf)
-	require.Equal(t, envconfig.ErrUnexportedField, err)
+	require.ErrorIs(t, err, envconfig.ErrUnexportedField)
 
 	err = envconfig.InitWithOptions(&conf, envconfig.Options{AllowUnexported: true})
-	require.Equal(t, nil, err)
+	require.NoError(t, err)
 }
 
 func TestNestedUnexportedField(t *testing.T) {
@@ -421,10 +421,10 @@ func TestNestedUnexportedField(t *testing.T) {
 	os.Setenv("FOO_BAR_BAZ", "foobar")
 
 	err := envconfig.Init(&conf)
-	require.Equal(t, envconfig.ErrUnexportedField, err)
+	require.ErrorIs(t, err, envconfig.ErrUnexportedField)
 
 	err = envconfig.InitWithOptions(&conf, envconfig.Options{AllowUnexported: true})
-	require.Equal(t, nil, err)
+	require.NoError(t, err)
 }
 
 type sliceWithUnmarshaler []int
@@ -451,7 +451,7 @@ func TestSliceTypeWithUnmarshaler(t *testing.T) {
 	os.Setenv("DATA", "1.2.3")
 
 	err := envconfig.Init(&conf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 3, len(conf.Data))
 	require.Equal(t, 1, conf.Data[0])
 	require.Equal(t, 2, conf.Data[1])
@@ -471,7 +471,7 @@ func TestParseDefaultVal(t *testing.T) {
 	}
 
 	err := envconfig.Init(&conf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, "localhost", conf.MySQL.Master.Address)
 	require.Equal(t, 3306, conf.MySQL.Master.Port)
 	require.Equal(t, time.Minute*1, conf.MySQL.Timeout)
@@ -480,7 +480,7 @@ func TestParseDefaultVal(t *testing.T) {
 	os.Setenv("myTimeout2", "20m")
 
 	err = envconfig.Init(&conf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, "localhost", conf.MySQL.Master.Address)
 	require.Equal(t, 3306, conf.MySQL.Master.Port)
 	require.Equal(t, time.Minute*2, conf.MySQL.Timeout)
@@ -502,7 +502,7 @@ func TestDefaultSlice(t *testing.T) {
 	os.Setenv("SHARDS", "")
 
 	err := envconfig.Init(&conf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	require.Equal(t, 2, len(conf.Names))
 	require.Equal(t, "foobar", conf.Names[0])
@@ -533,7 +533,7 @@ func TestInitPointerToAPointer(t *testing.T) {
 	os.Setenv("NAME", "foobar")
 
 	err := envconfig.Init(&tmp)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, "foobar", tmp.Name)
 }
 
@@ -573,7 +573,7 @@ func TestParseEmptyTag(t *testing.T) {
 	os.Setenv("NAME", "foobar")
 
 	err := envconfig.Init(&conf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, "foobar", conf.Name)
 }
 
@@ -588,7 +588,7 @@ func TestLeaveNil(t *testing.T) {
 		AllOptional: true,
 		LeaveNil:    true,
 	})
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Nil(t, conf.MySQL)
 }
 
@@ -607,7 +607,7 @@ func TestParseMapType(t *testing.T) {
 	os.Setenv("MAP", "a")
 
 	err := envconfig.Init(&conf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, 1, conf.Map["a"])
 }
 
@@ -624,7 +624,7 @@ func TestSliceOverwrite(t *testing.T) {
 	os.Setenv("MORE", "3,4")
 
 	err := envconfig.Init(&conf)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, []string{"baz"}, conf.Single)
 	require.Equal(t, []int{3, 4}, conf.More)
 }
