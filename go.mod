@@ -1,6 +1,6 @@
 module github.com/vrischmann/envconfig
 
-go 1.12
+go 1.13
 
 require (
 	github.com/kr/text v0.2.0 // indirect
