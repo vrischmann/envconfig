@@ -383,7 +383,7 @@ func parseBoolValue(v reflect.Value, str string) error {
 }
 
 func parseIntValue(v reflect.Value, str string) error {
-	val, err := strconv.ParseInt(str, 10, 64)
+	val, err := strconv.ParseInt(str, 10, v.Type().Bits())
 	if err != nil {
 		return err
 	}
@@ -393,7 +393,7 @@ func parseIntValue(v reflect.Value, str string) error {
 }
 
 func parseUintValue(v reflect.Value, str string) error {
-	val, err := strconv.ParseUint(str, 10, 64)
+	val, err := strconv.ParseUint(str, 10, v.Type().Bits())
 	if err != nil {
 		return err
 	}
@@ -403,7 +403,7 @@ func parseUintValue(v reflect.Value, str string) error {
 }
 
 func parseFloatValue(v reflect.Value, str string) error {
-	val, err := strconv.ParseFloat(str, 64)
+	val, err := strconv.ParseFloat(str, v.Type().Bits())
 	if err != nil {
 		return err
 	}
