@@ -3,6 +3,7 @@ package envconfig_test
 import (
 	"fmt"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -97,6 +98,121 @@ func TestParseFloatConfig(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, float32(0.02), conf.Delta)
 	require.Equal(t, float64(400.20000000001), conf.DeltaV)
+}
+
+func TestNumericRangeConfig(t *testing.T) {
+	type smallInt int8
+	type smallUint uint8
+	type smallFloat float32
+
+	type testCase struct {
+		input   string
+		initial interface{}
+		want    interface{}
+	}
+	cases := []testCase{
+		{"127", int8(17), int8(127)},
+		{"-128", int8(17), int8(-128)},
+		{"128", int8(17), nil},
+		{"-129", int8(17), nil},
+		{"32767", int16(17), int16(32767)},
+		{"-32768", int16(17), int16(-32768)},
+		{"32768", int16(17), nil},
+		{"-32769", int16(17), nil},
+		{"2147483647", int32(17), int32(2147483647)},
+		{"-2147483648", int32(17), int32(-2147483648)},
+		{"2147483648", int32(17), nil},
+		{"-2147483649", int32(17), nil},
+		{"9223372036854775807", int64(17), int64(9223372036854775807)},
+		{"-9223372036854775808", int64(17), int64(-9223372036854775808)},
+		{"9223372036854775808", int64(17), nil},
+		{"-9223372036854775809", int64(17), nil},
+		{"255", uint8(17), uint8(255)},
+		{"256", uint8(17), nil},
+		{"65535", uint16(17), uint16(65535)},
+		{"65536", uint16(17), nil},
+		{"4294967295", uint32(17), uint32(4294967295)},
+		{"4294967296", uint32(17), nil},
+		{"18446744073709551615", uint64(17), uint64(18446744073709551615)},
+		{"18446744073709551616", uint64(17), nil},
+		{"3.4028234663852886e38", float32(17), float32(3.4028234663852886e38)},
+		{"-3.4028234663852886e38", float32(17), float32(-3.4028234663852886e38)},
+		{"3.5e38", float32(17), nil},
+		{"-3.5e38", float32(17), nil},
+		{"1.7976931348623157e308", float64(17), float64(1.7976931348623157e308)},
+		{"1.8e308", float64(17), nil},
+		{"127", smallInt(17), smallInt(127)},
+		{"128", smallInt(17), nil},
+		{"255", smallUint(17), smallUint(255)},
+		{"256", smallUint(17), nil},
+		{"3.4028234663852886e38", smallFloat(17), smallFloat(3.4028234663852886e38)},
+		{"3.5e38", smallFloat(17), nil},
+		{"2147483647", int(17), int(2147483647)},
+		{"4294967295", uint(17), uint(4294967295)},
+	}
+	if strconv.IntSize == 32 {
+		cases = append(cases,
+			testCase{"2147483648", int(17), nil},
+			testCase{"4294967296", uint(17), nil})
+	}
+
+	previous, found := os.LookupEnv("ENVCONFIG_NUMERIC_RANGE")
+	defer func() {
+		if found {
+			os.Setenv("ENVCONFIG_NUMERIC_RANGE", previous)
+		} else {
+			os.Unsetenv("ENVCONFIG_NUMERIC_RANGE")
+		}
+	}()
+
+	for _, tc := range cases {
+		t.Run(fmt.Sprintf("%T/%s", tc.initial, tc.input), func(t *testing.T) {
+			conf := reflect.New(reflect.StructOf([]reflect.StructField{{
+				Name: "Value",
+				Type: reflect.TypeOf(tc.initial),
+				Tag:  `envconfig:"ENVCONFIG_NUMERIC_RANGE"`,
+			}}))
+			conf.Elem().Field(0).Set(reflect.ValueOf(tc.initial))
+			require.NoError(t, os.Setenv("ENVCONFIG_NUMERIC_RANGE", tc.input))
+
+			err := envconfig.Init(conf.Interface())
+			if tc.want == nil {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), "value out of range")
+				require.Equal(t, tc.initial, conf.Elem().Field(0).Interface())
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.want, conf.Elem().Field(0).Interface())
+			}
+		})
+	}
+}
+
+func TestNumericRangeDefaultsAndCollections(t *testing.T) {
+	var defaults struct {
+		Value int8 `envconfig:"ENVCONFIG_NUMERIC_DEFAULT,default=128"`
+	}
+	var pointer struct {
+		Value *int8 `envconfig:"ENVCONFIG_NUMERIC_COLLECTION"`
+	}
+	var slice struct {
+		Value []uint16 `envconfig:"ENVCONFIG_NUMERIC_COLLECTION"`
+	}
+	var structSlice struct {
+		Value []struct{ Value float32 } `envconfig:"ENVCONFIG_NUMERIC_COLLECTION"`
+	}
+
+	require.NoError(t, os.Setenv("ENVCONFIG_NUMERIC_DEFAULT", ""))
+	defer os.Unsetenv("ENVCONFIG_NUMERIC_DEFAULT")
+	require.Error(t, envconfig.Init(&defaults))
+
+	require.NoError(t, os.Setenv("ENVCONFIG_NUMERIC_COLLECTION", "128"))
+	defer os.Unsetenv("ENVCONFIG_NUMERIC_COLLECTION")
+	require.Error(t, envconfig.Init(&pointer))
+	require.NoError(t, os.Setenv("ENVCONFIG_NUMERIC_COLLECTION", "1,65536"))
+	require.Error(t, envconfig.Init(&slice))
+	require.NoError(t, os.Setenv("ENVCONFIG_NUMERIC_COLLECTION", "{3.5e38}"))
+	require.Error(t, envconfig.Init(&structSlice))
 }
 
 func TestParseSliceConfig(t *testing.T) {
